@@ -183,6 +183,7 @@ class ProductionController extends Controller
             ->pluck('primary_job_type');
 
         $allJobTypes = $jobFromReceptions->merge($jobFromEmployees)
+            ->map(fn($j) => trim($j))
             ->unique()
             ->sort()
             ->values();
