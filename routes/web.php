@@ -13,7 +13,7 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Protected routes
+// Protected routes (all authenticated users: admin + leader)
 Route::middleware(['auth'])->group(function () {
     Route::get('/', [ProductionController::class, 'dashboard'])->name('dashboard');
     Route::get('/api/trend-data', [ProductionController::class, 'trendData'])->name('api.trend-data');
@@ -23,18 +23,8 @@ Route::middleware(['auth'])->group(function () {
     // Production input routes
     Route::get('/input/{plant?}', [ProductionController::class, 'inputForm'])->name('input.form');
     Route::post('/input/{plant}', [ProductionController::class, 'storeInput'])->name('input.store');
-    // Route untuk nampilin halaman edit dan proses update-nya
-    Route::get('/production/{plant}/edit/{id}', [App\Http\Controllers\ProductionController::class, 'editInput'])->name('input.edit');
-    Route::put('/production/{plant}/update/{id}', [App\Http\Controllers\ProductionController::class, 'updateInput'])->name('input.update');
-
-    // Employee management routes
-    Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
-    Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
-    Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
-    Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
-    Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
-    Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
-    Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
+    Route::get('/production/{plant}/edit/{id}', [ProductionController::class, 'editInput'])->name('input.edit');
+    Route::put('/production/{plant}/update/{id}', [ProductionController::class, 'updateInput'])->name('input.update');
 
     // Overtime management routes
     Route::get('/overtime', [OvertimeController::class, 'index'])->name('overtime.index');
@@ -44,19 +34,31 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/overtime/{overtime}/reject', [OvertimeController::class, 'reject'])->name('overtime.reject');
     Route::delete('/overtime/{overtime}', [OvertimeController::class, 'destroy'])->name('overtime.destroy');
 
-    // Report routes
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
+    // === ADMIN ONLY (leader tidak bisa akses) ===
+    Route::middleware(['admin.only'])->group(function () {
+        // Employee management routes
+        Route::get('/employees', [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('/employees/create', [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('/employees', [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('/employees/{employee}/edit', [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('/employees/{employee}', [EmployeeController::class, 'update'])->name('employees.update');
+        Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy'])->name('employees.destroy');
+        Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
 
-    // Filter and export routes
-    Route::get('/filter/shift/{shift}', [ProductionController::class, 'filterByShift'])->name('filter.shift');
-    Route::get('/export/pdf', [ProductionController::class, 'exportPDF'])->name('export.pdf');
-    Route::get('/export/excel', [ProductionController::class, 'exportExcel'])->name('export.excel');
-    Route::get('/export/harian', [ProductionController::class, 'exportPDF'])->name('export.harian');
+        // Report routes
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
 
-    // User management routes
-    Route::get('/users', [UserController::class, 'index'])->name('users.index');
-    Route::post('/users', [UserController::class, 'store'])->name('users.store');
-    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
-    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+        // Filter and export routes
+        Route::get('/filter/shift/{shift}', [ProductionController::class, 'filterByShift'])->name('filter.shift');
+        Route::get('/export/pdf', [ProductionController::class, 'exportPDF'])->name('export.pdf');
+        Route::get('/export/excel', [ProductionController::class, 'exportExcel'])->name('export.excel');
+        Route::get('/export/harian', [ProductionController::class, 'exportPDF'])->name('export.harian');
+
+        // User management routes
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
 });
