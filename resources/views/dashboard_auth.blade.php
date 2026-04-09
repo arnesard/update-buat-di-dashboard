@@ -189,7 +189,7 @@
                         <th>Group</th>
                         <th>Shift</th>
                         <th>Pekerjaan</th>
-                        <th>Status</th>
+                        <th>Plan</th>
                         <th>Ritase</th>
                         <th>Produksi</th>
                         <th>Catatan</th>
@@ -205,9 +205,12 @@
                             {{-- TAMPILKAN SCAN/STRIPPING/DLL DI SINI --}}
                             <td>{{ $reception->job_type }}</td>
                             <td>
-                                <span
-                                    class="badge bg-{{ $reception->status == 'Team Leader' ? 'success' : ($reception->status == 'Driver Forklift' ? 'warning' : 'info') }}">
-                                    {{ $reception->status }}
+                                @php
+                                    $planColors = ['B' => 'primary', 'H' => 'success', 'I' => 'warning', 'T' => 'danger'];
+                                    $planColor = $planColors[$reception->plant] ?? 'secondary';
+                                @endphp
+                                <span class="badge bg-{{ $planColor }}">
+                                    Plan {{ $reception->plant }}
                                 </span>
                             </td>
                             <td>{{ $reception->ritase_result ?? '-' }}</td>

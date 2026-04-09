@@ -1,0 +1,19 @@
+{
+    "name": "Penerimaan Produksi — Gudang Ban B",
+    "short_name": "Receiving",
+    "description": "Sistem Monitoring & Input Penerimaan Produksi",
+    "start_url": "/web_receiving/public/",
+    "scope": "/web_receiving/public/",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#f8fafc",
+    "theme_color": "#0021b3",
+    "icons": [
+        {
+            "src": "/web_receiving/public/images/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
