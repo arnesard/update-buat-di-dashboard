@@ -171,12 +171,21 @@ class ProductionController extends Controller
             })->values();
         })->flatten();
 
-        // 6. All distinct job_today values (for chart filters)
-        $allJobTypes = Reception::whereNotNull('job_today')
+        // 6. All distinct job types (from receptions + employees)
+        $jobFromReceptions = Reception::whereNotNull('job_today')
             ->where('job_today', '!=', '')
             ->distinct()
-            ->orderBy('job_today')
             ->pluck('job_today');
+
+        $jobFromEmployees = Employee::whereNotNull('primary_job_type')
+            ->where('primary_job_type', '!=', '')
+            ->distinct()
+            ->pluck('primary_job_type');
+
+        $allJobTypes = $jobFromReceptions->merge($jobFromEmployees)
+            ->unique()
+            ->sort()
+            ->values();
 
         // 7. Trend 7 Days (cached 60s)
         // Generate all 7 dates to ensure chart always has 7 data points
