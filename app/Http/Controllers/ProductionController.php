@@ -362,6 +362,7 @@ class ProductionController extends Controller
                 'receptions.production_count',
                 'receptions.ritase_result',
                 'receptions.notes',
+                'receptions.photo',
                 'receptions.created_at',
                 'employees.name as operator_name',
                 'employees.employee_id as operator_id',
@@ -391,6 +392,7 @@ class ProductionController extends Controller
             'job_today'        => 'required|string|max:255',
             'shift'            => 'required|integer|in:1,2,3',
             'notes'            => 'nullable|string|max:1000',
+            'photo'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
             'ritase_result'    => $jobToday === 'Driver' ? 'required|integer|min:0' : 'nullable|integer|min:0',
             'production_count' => $jobToday === 'Driver' ? 'nullable|integer|min:0' : 'required|integer|min:0',
         ];
@@ -406,6 +408,14 @@ class ProductionController extends Controller
             'job_today'        => $request->job_today,
             'notes'            => $request->notes
         ];
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $file = $request->file('photo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/production'), $filename);
+            $data['photo'] = 'uploads/production/' . $filename;
+        }
 
         Reception::create($data);
 
@@ -439,14 +449,29 @@ class ProductionController extends Controller
     public function updateInput(Request $request, $plant, $id)
     {
         $reception = Reception::findOrFail($id);
-        $reception->update([
+
+        $updateData = [
             'employee_id'      => $request->employee_id,
             'shift'            => $request->shift,
             'job_today'        => $request->job_today,
             'production_count' => $request->production_count,
             'ritase_result'    => $request->ritase_result,
             'notes'            => $request->notes,
-        ]);
+        ];
+
+        // Handle photo upload on edit
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($reception->photo && file_exists(public_path($reception->photo))) {
+                unlink(public_path($reception->photo));
+            }
+            $file = $request->file('photo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/production'), $filename);
+            $updateData['photo'] = 'uploads/production/' . $filename;
+        }
+
+        $reception->update($updateData);
 
         // Clear caches on data change
         Cache::flush();
