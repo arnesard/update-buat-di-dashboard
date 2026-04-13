@@ -165,6 +165,129 @@
         box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3) !important;
     }
 
+    /* Photo thumbnail styles */
+    .report-photo-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e0f2fe;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .report-photo-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+        border-color: #0ea5e9;
+    }
+    .badge-foto {
+        font-size: 0.6rem;
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+        border-radius: 6px;
+        padding: 2px 6px;
+        cursor: pointer;
+    }
+    .badge-no-foto {
+        font-size: 0.6rem;
+        background: #f1f5f9;
+        color: #94a3b8;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 2px 6px;
+    }
+    /* Detail Modal */
+    #detailModal .modal-content {
+        border: none;
+        border-radius: 1.25rem;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+        overflow: hidden;
+    }
+    #detailModal .modal-header {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+        border: none;
+        padding: 1.25rem 1.5rem;
+    }
+    #detailModal .modal-body {
+        padding: 1.5rem;
+    }
+    .detail-photo-full {
+        width: 100%;
+        max-height: 380px;
+        object-fit: contain;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        cursor: zoom-in;
+        transition: transform 0.3s ease;
+    }
+    .detail-photo-full.zoomed {
+        transform: scale(1.5);
+        cursor: zoom-out;
+        z-index: 10;
+        position: relative;
+    }
+    .detail-info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .detail-info-row:last-child { border-bottom: none; }
+    .detail-info-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+        min-width: 90px;
+    }
+    .detail-info-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #1e293b;
+        flex: 1;
+    }
+    /* Lightbox overlay */
+    #photoLightbox {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.88);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    #photoLightbox.active { display: flex; }
+    #photoLightbox img {
+        max-width: 92vw;
+        max-height: 88vh;
+        border-radius: 12px;
+        box-shadow: 0 0 60px rgba(0,0,0,0.6);
+        object-fit: contain;
+    }
+    #photoLightbox .lb-close {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.5rem;
+        color: white;
+        font-size: 2rem;
+        cursor: pointer;
+        line-height: 1;
+        opacity: 0.85;
+        transition: opacity 0.2s;
+    }
+    #photoLightbox .lb-close:hover { opacity: 1; }
+    #photoLightbox .lb-caption {
+        margin-top: 1rem;
+        color: rgba(255,255,255,0.75);
+        font-size: 0.85rem;
+        text-align: center;
+    }
+
     @media print {
         .no-print { display: none !important; }
         .print-full-width { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
@@ -354,19 +477,36 @@
                     <thead style="background: #f8fafc;" class="sticky-top">
                         <tr class="border-bottom" style="color: #475569;">
                             <th class="ps-3 py-2 border-0">Detail Produksi</th>
-                            <th class="text-end pe-3 border-0">Hasil</th>
+                            <th class="text-center py-2 border-0" style="width:70px;">Foto</th>
+                            <th class="text-end pe-3 py-2 border-0">Hasil</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
                         @forelse($receptions as $reception)
-                        <tr>
+                        @php
+                            $hasPhoto = !empty($reception->photo);
+                            $photoUrl = $hasPhoto ? asset($reception->photo) : null;
+                            $empName  = $reception->emp_name ?? 'Unknown';
+                        @endphp
+                        <tr style="cursor:pointer;" onclick="openDetailModal(
+                            '{{ $empName }}',
+                            '{{ $reception->date->format('d/m/Y') }}',
+                            '{{ $reception->emp_plant ?? '-' }}',
+                            '{{ $reception->emp_group ?? '-' }}',
+                            '{{ $reception->shift }}',
+                            '{{ $reception->job_today ?? '-' }}',
+                            '{{ number_format($reception->production_count) }}',
+                            '{{ $reception->ritase_result > 0 ? $reception->ritase_result . ' Rit' : '-' }}',
+                            '{{ addslashes(Str::limit($reception->notes ?? '', 200)) }}',
+                            '{{ $photoUrl }}'
+                        )">
                             <td class="ps-3 py-3">
                                 <div class="d-flex flex-column gap-1">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge" style="font-size: 0.65rem; background: #e0e7ff; color: #4338ca;">
                                             {{ $reception->date->format('d/m/Y') }}
                                         </span>
-                                        <span class="fw-bold" style="color: #1e293b;">{{ $reception->emp_name ?? 'Unknown' }}</span>
+                                        <span class="fw-bold" style="color: #1e293b;">{{ $empName }}</span>
                                     </div>
                                     <div class="d-flex align-items-center gap-1 fw-medium" style="font-size: 0.7rem;">
                                         <span class="text-uppercase" style="color: #64748b;">PLANT {{ $reception->emp_plant }}</span>
@@ -374,6 +514,10 @@
                                         <span style="color: #64748b;">GRUP {{ $reception->emp_group }}</span>
                                         <span class="mx-1 opacity-50">•</span>
                                         <span class="fw-bold" style="color: #0284c7;">SHIFT {{ $reception->shift }}</span>
+                                        @if($reception->job_today)
+                                            <span class="mx-1 opacity-50">•</span>
+                                            <span style="color: #7c3aed;">{{ $reception->job_today }}</span>
+                                        @endif
                                     </div>
                                     @if($reception->notes)
                                         <div class="text-muted mt-1 fst-italic" style="font-size: 0.7rem;">
@@ -381,6 +525,16 @@
                                         </div>
                                     @endif
                                 </div>
+                            </td>
+                            <td class="text-center py-3" onclick="event.stopPropagation();">
+                                @if($hasPhoto)
+                                    <img src="{{ $photoUrl }}" alt="Foto"
+                                         class="report-photo-thumb"
+                                         onclick="openLightbox('{{ $photoUrl }}', '{{ $empName }} – {{ $reception->date->format('d/m/Y') }}')"
+                                         title="Klik untuk perbesar">
+                                @else
+                                    <span class="badge-no-foto">—</span>
+                                @endif
                             </td>
                             <td class="text-end pe-3 py-3">
                                 <div class="d-flex flex-column align-items-end gap-1">
@@ -391,6 +545,9 @@
                                         <span class="badge" style="font-size: 0.7rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
                                             {{ $reception->ritase_result }} Rit
                                         </span>
+                                    @endif
+                                    @if($hasPhoto)
+                                        <span class="badge-foto">📷 Foto</span>
                                     @endif
                                 </div>
                             </td>
@@ -522,6 +679,88 @@
     </div>
 </div>
 
+{{-- ====== DETAIL MODAL ====== --}}
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="d-flex align-items-center gap-2">
+                    <i data-lucide="clipboard-list" style="color:white; width:20px; height:20px;"></i>
+                    <h5 class="modal-title fw-bold text-white mb-0" id="detailModalTitle">Detail Produksi</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-4">
+                    {{-- Kolom kiri: Info --}}
+                    <div class="col-md-6">
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="user" size="12"></i> Operator</span>
+                            <span class="detail-info-value" id="d-name">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="calendar" size="12"></i> Tanggal</span>
+                            <span class="detail-info-value" id="d-date">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="factory" size="12"></i> Plant</span>
+                            <span class="detail-info-value" id="d-plant">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="users-2" size="12"></i> Grup</span>
+                            <span class="detail-info-value" id="d-group">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="clock" size="12"></i> Shift</span>
+                            <span class="detail-info-value" id="d-shift">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="briefcase" size="12"></i> Pekerjaan</span>
+                            <span class="detail-info-value" id="d-job">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="layers" size="12"></i> Produksi</span>
+                            <span class="detail-info-value" id="d-prod">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="navigation" size="12"></i> Ritase</span>
+                            <span class="detail-info-value" id="d-rit">-</span>
+                        </div>
+                        <div class="detail-info-row">
+                            <span class="detail-info-label"><i data-lucide="message-square" size="12"></i> Catatan</span>
+                            <span class="detail-info-value" id="d-notes" style="white-space:pre-line;">-</span>
+                        </div>
+                    </div>
+                    {{-- Kolom kanan: Foto --}}
+                    <div class="col-md-6 d-flex flex-column align-items-center justify-content-start" id="d-photo-col">
+                        <div class="w-100 text-center" id="d-photo-wrap">
+                            <img id="d-photo" src="" alt="Foto Hasil Kerja" class="detail-photo-full mb-2"
+                                 onclick="this.classList.toggle('zoomed')"
+                                 title="Klik untuk zoom | Klik lagi untuk kecil">
+                            <div class="text-muted small mt-1">Klik foto untuk zoom • Klik lagi untuk normal</div>
+                            <button class="btn btn-sm btn-outline-primary mt-2 rounded-pill"
+                                    onclick="openLightbox(document.getElementById('d-photo').src, document.getElementById('d-name').textContent)">
+                                <i data-lucide="maximize-2" size="14" class="me-1"></i> Buka Fullscreen
+                            </button>
+                        </div>
+                        <div id="d-no-photo" class="text-center py-5" style="display:none;">
+                            <div style="font-size:3rem;">📷</div>
+                            <div class="text-muted small mt-2">Tidak ada foto terlampir</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ====== PHOTO LIGHTBOX ====== --}}
+<div id="photoLightbox" onclick="closeLightbox()">
+    <span class="lb-close" onclick="closeLightbox()">&times;</span>
+    <img id="lbImg" src="" alt="">
+    <div class="lb-caption" id="lbCaption"></div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -605,6 +844,63 @@ function resetFilters() {
 // ECharts Trend
 document.addEventListener('DOMContentLoaded', function() {
     updateFilters();
+});
+
+// ====== DETAIL MODAL ======
+function openDetailModal(name, date, plant, group, shift, job, prod, rit, notes, photoUrl) {
+    document.getElementById('d-name').textContent  = name  || '-';
+    document.getElementById('d-date').textContent  = date  || '-';
+    document.getElementById('d-plant').textContent = plant !== '-' ? 'Plant ' + plant : '-';
+    document.getElementById('d-group').textContent = group !== '-' ? 'Grup ' + group  : '-';
+    document.getElementById('d-shift').textContent = shift ? 'Shift ' + shift : '-';
+    document.getElementById('d-job').textContent   = job   || '-';
+    document.getElementById('d-prod').textContent  = prod  || '-';
+    document.getElementById('d-rit').textContent   = rit   || '-';
+    document.getElementById('d-notes').textContent = notes || '(Tidak ada catatan)';
+
+    const photoEl   = document.getElementById('d-photo');
+    const photoWrap = document.getElementById('d-photo-wrap');
+    const noPhoto   = document.getElementById('d-no-photo');
+
+    // Reset zoom
+    photoEl.classList.remove('zoomed');
+
+    if (photoUrl && photoUrl !== 'null' && photoUrl !== '') {
+        photoEl.src = photoUrl;
+        photoWrap.style.display = 'block';
+        noPhoto.style.display   = 'none';
+    } else {
+        photoEl.src = '';
+        photoWrap.style.display = 'none';
+        noPhoto.style.display   = 'block';
+    }
+
+    document.getElementById('detailModalTitle').textContent = name || 'Detail Produksi';
+
+    var modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+
+    // Re-init lucide icons inside modal
+    if (window.lucide) lucide.createIcons();
+}
+
+// ====== LIGHTBOX ======
+function openLightbox(src, caption) {
+    if (!src || src === 'null' || src === '') return;
+    document.getElementById('lbImg').src      = src;
+    document.getElementById('lbCaption').textContent = caption || '';
+    document.getElementById('photoLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+    document.getElementById('photoLightbox').classList.remove('active');
+    document.body.style.overflow = '';
+}
+
+// Close lightbox with ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
 });
 </script>
 @endpush

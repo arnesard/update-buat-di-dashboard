@@ -124,6 +124,7 @@ class ReportController extends Controller
                 'receptions.date',
                 'receptions.job_today',
                 'receptions.notes',
+                'receptions.photo',
                 'employees.name as emp_name', 
                 'employees.plant as emp_plant', 
                 'employees.group as emp_group'
