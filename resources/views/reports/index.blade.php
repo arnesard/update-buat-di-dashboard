@@ -165,6 +165,69 @@
         box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3) !important;
     }
 
+    /* Photo Thumbnail */
+    .photo-thumb {
+        width: 44px;
+        height: 44px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .photo-thumb:hover {
+        border-color: #0ea5e9;
+        transform: scale(1.08);
+        box-shadow: 0 4px 12px rgba(14,165,233,0.3);
+    }
+    .no-photo-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e1;
+    }
+
+    /* Lightbox */
+    #lightbox-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.92);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+    #lightbox-overlay.active { display: flex; }
+    #lightbox-img {
+        max-width: 90vw;
+        max-height: 85vh;
+        border-radius: 12px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        object-fit: contain;
+    }
+    #lightbox-close {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        width: 40px; height: 40px;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 1.2rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    #lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
     @media print {
         .no-print { display: none !important; }
         .print-full-width { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
@@ -353,14 +416,40 @@
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
                     <thead style="background: #f8fafc;" class="sticky-top">
                         <tr class="border-bottom" style="color: #475569;">
-                            <th class="ps-3 py-2 border-0">Detail Produksi</th>
+                            <th class="ps-3 py-2 border-0" style="width:56px;">Foto</th>
+                            <th class="py-2 border-0">Detail Produksi</th>
                             <th class="text-end pe-3 border-0">Hasil</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
                         @forelse($receptions as $reception)
-                        <tr>
-                            <td class="ps-3 py-3">
+                        <tr style="cursor:pointer;" onclick="openDetailModal({{ json_encode([
+                            'name'       => $reception->emp_name ?? 'Unknown',
+                            'date'       => $reception->date->format('d/m/Y'),
+                            'plant'      => $reception->emp_plant,
+                            'group'      => $reception->emp_group,
+                            'shift'      => $reception->shift,
+                            'job'        => $reception->job_today,
+                            'production' => number_format($reception->production_count),
+                            'ritase'     => $reception->ritase_result,
+                            'notes'      => $reception->notes ?? '',
+                            'photo'      => $reception->photo ?? '',
+                        ]) }})">
+                            {{-- Kolom Foto --}}
+                            <td class="ps-3 py-2">
+                                @if($reception->photo)
+                                    <img src="{{ asset($reception->photo) }}"
+                                         class="photo-thumb"
+                                         alt="Foto produksi"
+                                         onclick="event.stopPropagation(); openLightbox('{{ asset($reception->photo) }}')">
+                                @else
+                                    <div class="no-photo-badge">
+                                        <i data-lucide="image-off" style="width:18px;height:18px;"></i>
+                                    </div>
+                                @endif
+                            </td>
+                            {{-- Kolom Detail --}}
+                            <td class="py-2">
                                 <div class="d-flex flex-column gap-1">
                                     <div class="d-flex align-items-center gap-2">
                                         <span class="badge" style="font-size: 0.65rem; background: #e0e7ff; color: #4338ca;">
@@ -382,7 +471,8 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-end pe-3 py-3">
+                            {{-- Kolom Hasil --}}
+                            <td class="text-end pe-3 py-2">
                                 <div class="d-flex flex-column align-items-end gap-1">
                                     <span class="badge fs-6 fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
                                         {{ number_format($reception->production_count) }}
@@ -522,6 +612,97 @@
     </div>
 </div>
 
+{{-- Lightbox --}}
+<div id="lightbox-overlay" onclick="closeLightbox()">
+    <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" src="" alt="Foto Fullscreen">
+</div>
+
+{{-- Modal Detail Produksi --}}
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:1.25rem; overflow:hidden;">
+      <div class="modal-header border-0" style="background: linear-gradient(135deg,#0ea5e9,#6366f1); color:white;">
+        <h5 class="modal-title fw-bold" id="detailModalLabel">
+            <i data-lucide="clipboard-list" style="width:18px;height:18px;vertical-align:middle;" class="me-2"></i>
+            Detail Produksi
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <div class="row g-0">
+          {{-- Kolom Foto --}}
+          <div class="col-md-5 d-flex align-items-center justify-content-center" style="background:#f8fafc; min-height:260px;">
+            <div id="modal-photo-wrapper" class="text-center p-3 w-100">
+              <img id="modal-photo" src="" alt="Foto Produksi"
+                   style="max-width:100%; max-height:280px; border-radius:12px; object-fit:cover; cursor:zoom-in; box-shadow:0 4px 16px rgba(0,0,0,0.12);"
+                   onclick="openLightbox(this.src)">
+              <div id="modal-no-photo" class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                  <i data-lucide="image-off" style="width:48px;height:48px;color:#cbd5e1;"></i>
+                  <p class="mt-2 small mb-0">Tidak ada foto</p>
+              </div>
+            </div>
+          </div>
+          {{-- Kolom Info --}}
+          <div class="col-md-7 p-4">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <div style="width:40px;height:40px;border-radius:10px;background:#e0e7ff;display:flex;align-items:center;justify-content:center;">
+                    <i data-lucide="user" style="width:20px;height:20px;color:#4338ca;"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="font-size:1rem;color:#1e293b;" id="modal-name"></div>
+                    <div class="text-muted small" id="modal-date"></div>
+                </div>
+            </div>
+            <div class="row g-2">
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#f0f9ff;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Plant</div>
+                        <div class="fw-bold" id="modal-plant"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#f0f9ff;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Grup</div>
+                        <div class="fw-bold" id="modal-group"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#f0f9ff;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Shift</div>
+                        <div class="fw-bold" id="modal-shift"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#f0f9ff;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Jenis Kerja</div>
+                        <div class="fw-bold small" id="modal-job"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#ecfdf5; border:1px solid #a7f3d0;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Produksi</div>
+                        <div class="fw-bold" style="font-size:1.1rem;color:#047857;" id="modal-production"></div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="p-2 rounded-3" style="background:#e0f2fe; border:1px solid #bae6fd;">
+                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Ritase</div>
+                        <div class="fw-bold" style="font-size:1.1rem;color:#0369a1;" id="modal-ritase"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="modal-notes-wrapper" class="mt-3 p-2 rounded-3" style="background:#fffbeb;border:1px solid #fde68a;">
+                <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Catatan</div>
+                <div class="small fst-italic" id="modal-notes"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -601,8 +782,56 @@ function resetFilters() {
     window.location.href = window.location.pathname;
 }
 
+// ---- Detail Modal ----
+function openDetailModal(data) {
+    document.getElementById('modal-name').textContent       = data.name;
+    document.getElementById('modal-date').textContent       = data.date;
+    document.getElementById('modal-plant').textContent      = 'Plant ' + data.plant;
+    document.getElementById('modal-group').textContent      = 'Grup '  + data.group;
+    document.getElementById('modal-shift').textContent      = 'Shift ' + data.shift;
+    document.getElementById('modal-job').textContent        = data.job  || '-';
+    document.getElementById('modal-production').textContent = data.production;
+    document.getElementById('modal-ritase').textContent     = data.ritase > 0 ? data.ritase + ' Rit' : '-';
 
-// ECharts Trend
+    const notesWrapper = document.getElementById('modal-notes-wrapper');
+    if (data.notes) {
+        document.getElementById('modal-notes').textContent = data.notes;
+        notesWrapper.style.display = 'block';
+    } else {
+        notesWrapper.style.display = 'none';
+    }
+
+    const img     = document.getElementById('modal-photo');
+    const noPhoto = document.getElementById('modal-no-photo');
+    if (data.photo) {
+        img.src              = '/' + data.photo;
+        img.style.display    = 'block';
+        noPhoto.style.display = 'none';
+    } else {
+        img.style.display    = 'none';
+        noPhoto.style.display = 'flex';
+    }
+
+    // Re-render lucide icons inside modal
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    modal.show();
+}
+
+// ---- Lightbox ----
+function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox-overlay').classList.add('active');
+}
+function closeLightbox() {
+    document.getElementById('lightbox-overlay').classList.remove('active');
+    document.getElementById('lightbox-img').src = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeLightbox();
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     updateFilters();
 });
