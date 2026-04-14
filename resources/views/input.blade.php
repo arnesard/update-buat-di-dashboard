@@ -295,28 +295,21 @@
 
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-uppercase text-muted">
-                                    <i data-lucide="check-square" size="14" class="me-1"></i>
                                     Pekerjaan Hari Ini <span class="text-danger">*</span>
                                     <span class="text-muted fw-normal ms-1">(boleh lebih dari satu)</span>
                                 </label>
-                                <div class="border rounded-3 p-3" style="background:#f8fafc;">
-                                    <div class="row g-2">
-                                        @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
-                                        <div class="col-6 col-md-4 col-xl-3">
-                                            <label class="d-flex align-items-center gap-2 p-2 rounded-3 border bg-white job-check-label w-100 mb-0">
-                                                <input type="checkbox"
-                                                       name="job_today[]"
-                                                       value="{{ $job }}"
-                                                       class="job-checkbox form-check-input mt-0"
-                                                       onchange="toggleRitase()">
-                                                <span class="small fw-semibold">{{ $job }}</span>
-                                            </label>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    <div id="job-validation-msg" class="text-danger small mt-2" style="display:none;">
-                                        ⚠ Pilih minimal satu pekerjaan!
-                                    </div>
+                                <div class="border rounded-3 px-3 py-2" style="background:#f8fafc; max-height:130px; overflow-y:auto;">
+                                    @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
+                                    <label class="d-flex align-items-center gap-2 py-1 job-check-label" style="cursor:pointer;">
+                                        <input type="checkbox"
+                                               name="job_today[]"
+                                               value="{{ $job }}"
+                                               class="job-checkbox form-check-input mt-0"
+                                               onchange="toggleRitase()">
+                                        <span class="small">{{ $job }}</span>
+                                    </label>
+                                    @endforeach
+                                    <div id="job-validation-msg" class="text-danger small" style="display:none;">&#9888; Pilih minimal satu!</div>
                                 </div>
                             </div>
 
