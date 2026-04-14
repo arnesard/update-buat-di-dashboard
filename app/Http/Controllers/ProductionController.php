@@ -387,16 +387,21 @@ class ProductionController extends Controller
 
     public function storeInput(Request $request, $plant)
     {
-        $jobToday = $request->input('job_today');
+        // job_today dikirim sebagai array dari checkboxes
+        $jobTodayArray  = $request->input('job_today', []);
+        $jobTodayString = implode(',', array_filter(array_map('trim', (array)$jobTodayArray)));
+        $isDriver       = in_array('Driver', (array)$jobTodayArray);
+        $onlyDriver     = count($jobTodayArray) === 1 && $isDriver;
 
         $rules = [
             'employee_id'      => 'required|string|max:255',
-            'job_today'        => 'required|string|max:255',
+            'job_today'        => 'required|array|min:1',
+            'job_today.*'      => 'string|max:100',
             'shift'            => 'required|integer|in:1,2,3',
             'notes'            => 'nullable|string|max:1000',
             'photo'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'ritase_result'    => $jobToday === 'Driver' ? 'required|integer|min:0' : 'nullable|integer|min:0',
-            'production_count' => $jobToday === 'Driver' ? 'nullable|integer|min:0' : 'required|integer|min:0',
+            'ritase_result'    => $onlyDriver  ? 'required|integer|min:0' : 'nullable|integer|min:0',
+            'production_count' => !$onlyDriver ? 'required|integer|min:0' : 'nullable|integer|min:0',
         ];
 
         $request->validate($rules);
@@ -407,7 +412,7 @@ class ProductionController extends Controller
             'ritase_result'    => $request->ritase_result ?? 0,
             'date'             => Carbon::today(),
             'production_count' => $request->production_count ?? 0,
-            'job_today'        => $request->job_today,
+            'job_today'        => $jobTodayString,
             'notes'            => $request->notes
         ];
 
@@ -452,10 +457,14 @@ class ProductionController extends Controller
     {
         $reception = Reception::findOrFail($id);
 
+        // job_today dikirim sebagai array dari checkboxes
+        $jobTodayArray  = $request->input('job_today', []);
+        $jobTodayString = implode(',', array_filter(array_map('trim', (array)$jobTodayArray)));
+
         $updateData = [
             'employee_id'      => $request->employee_id,
             'shift'            => $request->shift,
-            'job_today'        => $request->job_today,
+            'job_today'        => $jobTodayString,
             'production_count' => $request->production_count,
             'ritase_result'    => $request->ritase_result,
             'notes'            => $request->notes,

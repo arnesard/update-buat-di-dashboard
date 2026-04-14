@@ -61,12 +61,29 @@
         }
         .monitoring-table .col-no { width: 50px; text-align: center; }
         .monitoring-table .col-nama { width: auto; text-align: left; }
-        .monitoring-table .col-pekerjaan { width: 150px; text-align: center; }
-        .monitoring-table .col-shift { width: 100px; text-align: center; }
-        .monitoring-table .col-hasil { width: 120px; text-align: right; }
-        .monitoring-table .col-ritase { width: 100px; text-align: right; }
-        .monitoring-table .col-aksi { width: 100px; text-align: center; }
-        .monitoring-table .col-foto { width: 80px; text-align: center; }
+        .monitoring-table .col-pekerjaan { width: 180px; text-align: left; }
+        .monitoring-table .col-shift { width: 90px; text-align: center; }
+        .monitoring-table .col-hasil { width: 110px; text-align: right; }
+        .monitoring-table .col-ritase { width: 90px; text-align: right; }
+        .monitoring-table .col-aksi { width: 90px; text-align: center; }
+        .monitoring-table .col-foto { width: 70px; text-align: center; }
+
+        /* Job Checkboxes */
+        .job-check-label {
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .job-check-label:hover {
+            background: #e0f2fe !important;
+            border-color: #0ea5e9 !important;
+        }
+        .job-check-label:has(input:checked) {
+            background: #e0f2fe !important;
+            border-color: #0ea5e9 !important;
+            color: #0369a1;
+            font-weight: 700;
+        }
         .photo-thumb {
             width: 48px;
             height: 48px;
@@ -288,21 +305,30 @@
                                 </div>
                             </div>
 
-                            <div class="col-12 col-sm-6 col-md-3">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Pekerjaan Hari Ini</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i data-lucide="axe" size="18"></i></span>
-                                    <select name="job_today" id="job-select" class="form-select border-start-0 shadow-none" required onchange="toggleRitase()">
-                                        <option value="">-- Pilih --</option>
-                                        <option value="Scan">Scan</option>
-                                        <option value="Strapping">Strapping</option>
-                                        <option value="Tempel Stiker">Tempel Stiker</option>
-                                        <option value="Susun Tire">Susun Tire</option>
-                                        <option value="Pressing">Pressing</option>
-                                        <option value="Driver">Driver</option>
-                                        <option value="Leader">Leader</option>
-                                        <option value="Pasang Product Tage OE">Pasang Product Tage OE</option>
-                                    </select>
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-uppercase text-muted">
+                                    <i data-lucide="check-square" size="14" class="me-1"></i>
+                                    Pekerjaan Hari Ini <span class="text-danger">*</span>
+                                    <span class="text-muted fw-normal ms-1">(boleh lebih dari satu)</span>
+                                </label>
+                                <div class="border rounded-3 p-3" style="background:#f8fafc;">
+                                    <div class="row g-2">
+                                        @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
+                                        <div class="col-6 col-md-4 col-xl-3">
+                                            <label class="d-flex align-items-center gap-2 p-2 rounded-3 border bg-white job-check-label w-100 mb-0">
+                                                <input type="checkbox"
+                                                       name="job_today[]"
+                                                       value="{{ $job }}"
+                                                       class="job-checkbox form-check-input mt-0"
+                                                       onchange="toggleRitase()">
+                                                <span class="small fw-semibold">{{ $job }}</span>
+                                            </label>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                    <div id="job-validation-msg" class="text-danger small mt-2" style="display:none;">
+                                        ⚠ Pilih minimal satu pekerjaan!
+                                    </div>
                                 </div>
                             </div>
 
@@ -410,7 +436,11 @@
                                             </div>
                                         </td>
                                         <td data-label="Pekerjaan" class="col-pekerjaan">
-                                            <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">{{ $data->job_today }}</span>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                @foreach(array_filter(array_map('trim', explode(',', $data->job_today))) as $job)
+                                                    <span class="badge bg-info bg-opacity-10 text-info px-2 py-1" style="font-size:0.68rem;">{{ $job }}</span>
+                                                @endforeach
+                                            </div>
                                         </td>
                                         <td data-label="Shift" class="col-shift">Shift {{ $data->shift }}</td>
                                         <td data-label="Hasil" class="col-hasil">{{ number_format($data->production_count) }}</td>
@@ -537,45 +567,74 @@
 
         // === TOGGLE RITASE ===
         function toggleRitase() {
-            const jobSelect = document.getElementById('job-select');
+            const checked = document.querySelectorAll('.job-checkbox:checked');
+            const selectedJobs = Array.from(checked).map(cb => cb.value);
+            const isDriver = selectedJobs.includes('Driver');
             const ritaseWrapper = document.getElementById('ritase-input-wrapper');
-            const isDriver = jobSelect.value === 'Driver';
 
             if (isDriver) {
                 ritaseWrapper.classList.add('show-ritase');
             } else {
                 ritaseWrapper.classList.remove('show-ritase');
             }
+
+            // Visual feedback on checkbox labels
+            document.querySelectorAll('.job-checkbox').forEach(cb => {
+                const label = cb.closest('.job-check-label');
+                if (cb.checked) {
+                    label.style.background  = '#e0f2fe';
+                    label.style.borderColor = '#0ea5e9';
+                    label.style.color       = '#0369a1';
+                } else {
+                    label.style.background  = '';
+                    label.style.borderColor = '';
+                    label.style.color       = '';
+                }
+            });
         }
 
         // === FORM VALIDATION ===
         document.getElementById('production-form').onsubmit = function(e) {
-            const employeeId = document.getElementById('employee-id-hidden').value;
-            const jobSelect = document.getElementById('job-select').value;
+            const employeeId      = document.getElementById('employee-id-hidden').value;
+            const checkedJobs     = document.querySelectorAll('.job-checkbox:checked');
             const productionCount = document.getElementById('production-count').value;
-            const ritaseResult = document.getElementById('ritase-result').value;
+            const ritaseResult    = document.getElementById('ritase-result') ? document.getElementById('ritase-result').value : '';
 
             if (!employeeId) {
-                alert("Harap pilih Nama Operator!");
+                alert('Harap pilih Nama Operator!');
                 return false;
             }
 
-            // Jika bukan Driver, WAJIB isi Produksi
-            if (jobSelect !== 'Driver') {
-                if (!productionCount || productionCount <= 0) {
-                    alert("Harap isi Jumlah Produksi dengan benar!");
+            if (checkedJobs.length === 0) {
+                document.getElementById('job-validation-msg').style.display = 'block';
+                document.querySelector('.border.rounded-3').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return false;
+            } else {
+                document.getElementById('job-validation-msg').style.display = 'none';
+            }
+
+            const selectedJobs = Array.from(checkedJobs).map(cb => cb.value);
+            const isDriver     = selectedJobs.includes('Driver');
+            const onlyDriver   = selectedJobs.length === 1 && isDriver;
+
+            // Jika hanya Driver saja, wajib isi Ritase
+            if (onlyDriver) {
+                if (!ritaseResult || parseInt(ritaseResult) <= 0) {
+                    alert('Pekerjaan Driver wajib mengisi jumlah Ritase!');
                     return false;
                 }
             } else {
-                // Jika Driver, WAJIB isi Ritase, Produksi opsional
-                if (!ritaseResult || ritaseResult <= 0) {
-                    alert("Pekerjaan Driver wajib mengisi jumlah Ritase!");
+                // Jika ada pekerjaan lain, wajib isi Produksi
+                if (!productionCount || parseInt(productionCount) <= 0) {
+                    alert('Harap isi Jumlah Produksi dengan benar!');
                     return false;
                 }
             }
         };
 
-        document.addEventListener('DOMContentLoaded', toggleRitase);
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleRitase();
+        });
 
         // === PHOTO PREVIEW ===
         document.getElementById('photo-input').addEventListener('change', function(e) {

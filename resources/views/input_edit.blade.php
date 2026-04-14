@@ -56,24 +56,36 @@
                         </div>
 
                         {{-- job hari ini --}}
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-uppercase text-muted">Pekerjaan hari ini</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0 d-flex align-items-center justify-content-center" style="width: 46px;">
-                                    <i data-lucide="hammer" size="18"></i>
-                                </span>
-                                <select name="job_today" id="job-select" class="form-select form-control-custom border-start-0 shadow-none"
-                                    required onchange="toggleRitase()">
-                                    <option value="">-- Pilih pekerjaan --</option>
-                                    <option value="Scan" {{ $data->job_today == 'Scan' ? 'selected' : '' }}>Scan</option>
-                                    <option value="Strapping" {{ $data->job_today == 'Strapping' ? 'selected' : '' }}>Strapping</option>
-                                    <option value="Tempel Stiker" {{ $data->job_today == 'Tempel Stiker' ? 'selected' : '' }}>Tempel Stiker</option>
-                                    <option value="Susun Tire" {{ $data->job_today == 'Susun Tire' ? 'selected' : '' }}>Susun Tire</option>
-                                    <option value="Pressing" {{ $data->job_today == 'Pressing' ? 'selected' : '' }}>Pressing</option>
-                                    <option value="Driver" {{ $data->job_today == 'Driver' ? 'selected' : '' }}>Driver</option>
-                                    <option value="Leader" {{ $data->job_today == 'Leader' ? 'selected' : '' }}>Leader</option>
-                                    <option value="Pasang Product Tage OE" {{ $data->job_today == 'Pasang Product Tage OE' ? 'selected' : '' }}>Pasang Product Tage OE</option>
-                                </select>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted">
+                                <i data-lucide="check-square" size="14" class="me-1"></i>
+                                Pekerjaan Hari Ini <span class="text-danger">*</span>
+                                <span class="text-muted fw-normal ms-1">(boleh lebih dari satu)</span>
+                            </label>
+                            @php
+                                $selectedJobs = array_map('trim', explode(',', $data->job_today ?? ''));
+                            @endphp
+                            <div class="border rounded-3 p-3" style="background:#f8fafc;">
+                                <div class="row g-2">
+                                    @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
+                                    <div class="col-6 col-md-4 col-xl-3">
+                                        <label class="d-flex align-items-center gap-2 p-2 rounded-3 border bg-white job-check-label w-100 mb-0"
+                                               style="cursor:pointer; transition:all 0.15s; user-select:none;"
+                                               id="label_{{ Str::slug($job) }}">
+                                            <input type="checkbox"
+                                                   name="job_today[]"
+                                                   value="{{ $job }}"
+                                                   class="job-checkbox form-check-input mt-0"
+                                                   {{ in_array($job, $selectedJobs) ? 'checked' : '' }}
+                                                   onchange="toggleRitase()">
+                                            <span class="small fw-semibold">{{ $job }}</span>
+                                        </label>
+                                    </div>
+                                    @endforeach
+                                </div>
+                                <div id="job-validation-msg" class="text-danger small mt-2" style="display:none;">
+                                    &#9888; Pilih minimal satu pekerjaan!
+                                </div>
                             </div>
                         </div>
 
@@ -170,19 +182,22 @@
 @push('scripts')
 <script>
     function toggleRitase() {
-        const jobSelect = document.getElementById('job-select');
-        const ritaseCols = document.querySelectorAll('.ritase-col');
-        const isDriver = jobSelect.value === 'Driver';
+        const checked      = document.querySelectorAll('.job-checkbox:checked');
+        const selectedJobs = Array.from(checked).map(cb => cb.value);
+        const isDriver     = selectedJobs.includes('Driver');
+        const ritaseCols   = document.querySelectorAll('.ritase-col');
 
         ritaseCols.forEach(col => {
-            if (isDriver) {
-                if (window.innerWidth > 768) {
-                    col.style.display = 'block';
-                } else {
-                    col.style.display = 'flex';
-                }
-            } else {
-                col.style.display = 'none';
+            col.style.display = isDriver ? (window.innerWidth > 768 ? 'block' : 'flex') : 'none';
+        });
+
+        // Visual feedback
+        document.querySelectorAll('.job-checkbox').forEach(cb => {
+            const label = cb.closest('.job-check-label');
+            if (label) {
+                label.style.background  = cb.checked ? '#e0f2fe' : '';
+                label.style.borderColor = cb.checked ? '#0ea5e9' : '';
+                label.style.color       = cb.checked ? '#0369a1' : '';
             }
         });
     }
