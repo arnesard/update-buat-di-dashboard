@@ -120,19 +120,7 @@
                             </div>
                         </div>
 
-                        {{-- ritase --}}
-                        <div class="col-md-6 ritase-col">
-                            <label class="form-label small fw-bold text-uppercase text-muted">Ritase / Trip</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0 d-flex align-items-center justify-content-center" style="width: 46px;">
-                                    <i data-lucide="navigation" size="18"></i>
-                                </span>
-                                <input type="number" name="ritase_result"
-                                    class="form-control form-control-custom border-start-0 shadow-none"
-                                    value="{{ $data->ritase_result ?? 0 }}"
-                                    placeholder="Masukkan total ritase">
-                            </div>
-                        </div>
+
 
                         {{-- Catatan --}}
                         <div class="col-12">
@@ -182,16 +170,7 @@
 @push('scripts')
 <script>
     function toggleRitase() {
-        const checked      = document.querySelectorAll('.job-checkbox:checked');
-        const selectedJobs = Array.from(checked).map(cb => cb.value);
-        const isDriver     = selectedJobs.includes('Driver');
-        const ritaseCols   = document.querySelectorAll('.ritase-col');
-
-        ritaseCols.forEach(col => {
-            col.style.display = isDriver ? (window.innerWidth > 768 ? 'block' : 'flex') : 'none';
-        });
-
-        // Visual feedback
+        // Visual feedback checkbox saja
         document.querySelectorAll('.job-checkbox').forEach(cb => {
             const label = cb.closest('.job-check-label');
             if (label) {

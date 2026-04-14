@@ -35,18 +35,7 @@
             display: block;
         }
 
-        /* Monitoring table ritase column */
-        .ritase-col {
-            display: none;
-        }
-        @php
-            $hasDriver = $liveData->where('job_today', 'Driver')->count() > 0;
-        @endphp
-        @if($hasDriver)
-        .ritase-col {
-            display: table-cell !important;
-        }
-        @endif
+        @php $hasDriver = false; @endphp
 
         /* Definitive Alignment Fix */
         .monitoring-table {
@@ -63,8 +52,7 @@
         .monitoring-table .col-nama { width: auto; text-align: left; }
         .monitoring-table .col-pekerjaan { width: 180px; text-align: left; }
         .monitoring-table .col-shift { width: 90px; text-align: center; }
-        .monitoring-table .col-hasil { width: 110px; text-align: right; }
-        .monitoring-table .col-ritase { width: 90px; text-align: right; }
+        .monitoring-table .col-hasil { width: 120px; text-align: right; }
         .monitoring-table .col-aksi { width: 90px; text-align: center; }
         .monitoring-table .col-foto { width: 70px; text-align: center; }
 
@@ -353,14 +341,7 @@
                                 </div>
                             </div>
 
-                            {{-- Ritase Form Input --}}
-                            <div class="col-12 col-md-6 ritase-form-group" id="ritase-input-wrapper">
-                                <label class="form-label small fw-bold text-uppercase text-muted">Ritase / Trip</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i data-lucide="navigation" size="18"></i></span>
-                                    <input type="number" name="ritase_result" id="ritase-result" class="form-control border-start-0 shadow-none" placeholder="Total ritase">
-                                </div>
-                            </div>
+
 
                             <div class="col-12">
                                 <label class="form-label small fw-bold text-uppercase text-muted">Catatan</label>
@@ -412,7 +393,6 @@
                                     <th class="col-pekerjaan">Pekerjaan</th>
                                     <th class="col-shift">Shift</th>
                                     <th class="col-hasil">Hasil</th>
-                                    <th class="col-ritase ritase-col">Ritase</th>
                                     <th class="col-foto">Foto</th>
                                     <th class="py-3 d-md-none text-center" style="width: 100px;">Catatan</th>
                                     <th class="col-aksi">Aksi</th>
@@ -444,7 +424,6 @@
                                         </td>
                                         <td data-label="Shift" class="col-shift">Shift {{ $data->shift }}</td>
                                         <td data-label="Hasil" class="col-hasil">{{ number_format($data->production_count) }}</td>
-                                        <td data-label="Ritase" class="col-ritase ritase-col">{{ $data->ritase_result ?? 0 }}</td>
                                         <td data-label="Foto" class="col-foto">
                                             @if($data->photo)
                                                 <img src="{{ asset($data->photo) }}"
@@ -468,7 +447,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="{{ $hasDriver ? 9 : 8 }}" class="text-center py-5 text-muted">Belum ada data.</td>
+                                        <td colspan="7" class="text-center py-5 text-muted">Belum ada data.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -565,30 +544,14 @@
             });
         })();
 
-        // === TOGGLE RITASE ===
+        // === TOGGLE: visual feedback checkbox ===
         function toggleRitase() {
-            const checked = document.querySelectorAll('.job-checkbox:checked');
-            const selectedJobs = Array.from(checked).map(cb => cb.value);
-            const isDriver = selectedJobs.includes('Driver');
-            const ritaseWrapper = document.getElementById('ritase-input-wrapper');
-
-            if (isDriver) {
-                ritaseWrapper.classList.add('show-ritase');
-            } else {
-                ritaseWrapper.classList.remove('show-ritase');
-            }
-
-            // Visual feedback on checkbox labels
             document.querySelectorAll('.job-checkbox').forEach(cb => {
                 const label = cb.closest('.job-check-label');
-                if (cb.checked) {
-                    label.style.background  = '#e0f2fe';
-                    label.style.borderColor = '#0ea5e9';
-                    label.style.color       = '#0369a1';
-                } else {
-                    label.style.background  = '';
-                    label.style.borderColor = '';
-                    label.style.color       = '';
+                if (label) {
+                    label.style.background  = cb.checked ? '#e0f2fe' : '';
+                    label.style.borderColor = cb.checked ? '#0ea5e9' : '';
+                    label.style.color       = cb.checked ? '#0369a1' : '';
                 }
             });
         }
@@ -598,7 +561,6 @@
             const employeeId      = document.getElementById('employee-id-hidden').value;
             const checkedJobs     = document.querySelectorAll('.job-checkbox:checked');
             const productionCount = document.getElementById('production-count').value;
-            const ritaseResult    = document.getElementById('ritase-result') ? document.getElementById('ritase-result').value : '';
 
             if (!employeeId) {
                 alert('Harap pilih Nama Operator!');
@@ -613,22 +575,9 @@
                 document.getElementById('job-validation-msg').style.display = 'none';
             }
 
-            const selectedJobs = Array.from(checkedJobs).map(cb => cb.value);
-            const isDriver     = selectedJobs.includes('Driver');
-            const onlyDriver   = selectedJobs.length === 1 && isDriver;
-
-            // Jika hanya Driver saja, wajib isi Ritase
-            if (onlyDriver) {
-                if (!ritaseResult || parseInt(ritaseResult) <= 0) {
-                    alert('Pekerjaan Driver wajib mengisi jumlah Ritase!');
-                    return false;
-                }
-            } else {
-                // Jika ada pekerjaan lain, wajib isi Produksi
-                if (!productionCount || parseInt(productionCount) <= 0) {
-                    alert('Harap isi Jumlah Produksi dengan benar!');
-                    return false;
-                }
+            if (!productionCount || parseInt(productionCount) <= 0) {
+                alert('Harap isi Jumlah Produksi dengan benar!');
+                return false;
             }
         };
 
