@@ -73,14 +73,13 @@
             object-fit: cover;
             border-radius: 8px;
             border: 2px solid #e2e8f0;
-            cursor: pointer;
-            transition: transform 0.2s ease;
+            cursor: zoom-in;
+            transition: all 0.2s ease;
         }
         .photo-thumb:hover {
-            transform: scale(1.8);
-            z-index: 10;
-            position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border-color: #0ea5e9;
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(14,165,233,0.35);
         }
         .photo-preview-input {
             width: 64px;
@@ -89,6 +88,42 @@
             border-radius: 10px;
             border: 2px solid #0d6efd;
         }
+
+        /* Lightbox */
+        #lightbox-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        #lightbox-overlay.active { display: flex; }
+        #lightbox-img {
+            max-width: 92vw;
+            max-height: 88vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        #lightbox-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 40px; height: 40px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        #lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
         @media (max-width: 768px) {
             @if($hasDriver)
@@ -382,7 +417,11 @@
                                         <td data-label="Ritase" class="col-ritase ritase-col">{{ $data->ritase_result ?? 0 }}</td>
                                         <td data-label="Foto" class="col-foto">
                                             @if($data->photo)
-                                                <img src="{{ asset($data->photo) }}" alt="Foto" class="photo-thumb">
+                                                <img src="{{ asset($data->photo) }}"
+                                                     alt="Foto"
+                                                     class="photo-thumb"
+                                                     title="Klik untuk perbesar"
+                                                     onclick="openLightbox('{{ asset($data->photo) }}')">
                                             @else
                                                 <span class="text-muted small">-</span>
                                             @endif
@@ -407,6 +446,13 @@
                     </div>
                 </div>
             </div>
+    </div>
+
+    {{-- Lightbox --}}
+    <div id="lightbox-overlay" onclick="closeLightbox()">
+        <button id="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+        <img id="lightbox-img" src="" alt="Foto Fullscreen">
+    </div>
 
     <script>
         // === SEARCHABLE OPERATOR DROPDOWN ===
@@ -544,6 +590,19 @@
             } else {
                 preview.style.display = 'none';
             }
+        });
+
+        // === LIGHTBOX ===
+        function openLightbox(src) {
+            document.getElementById('lightbox-img').src = src;
+            document.getElementById('lightbox-overlay').classList.add('active');
+        }
+        function closeLightbox() {
+            document.getElementById('lightbox-overlay').classList.remove('active');
+            document.getElementById('lightbox-img').src = '';
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeLightbox();
         });
     </script>
 @endsection
