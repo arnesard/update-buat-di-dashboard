@@ -334,7 +334,7 @@
                                 <div class="job-dropdown-wrapper" id="job-dropdown-wrapper">
                                     <div class="job-dropdown-trigger" id="job-dropdown-trigger" onclick="toggleJobDropdown()">
                                         <span id="job-selected-text" class="placeholder">Pilih</span>
-                                        <i data-lucide="chevron-down" size="16" id="job-chevron"></i>
+                                        <svg id="job-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                     </div>
                                     <div class="job-dropdown-panel" id="job-dropdown-panel">
                                         @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)

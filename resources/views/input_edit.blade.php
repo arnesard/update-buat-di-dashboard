@@ -67,7 +67,7 @@
                             <div class="job-dropdown-wrapper" id="job-dropdown-wrapper">
                                 <div class="job-dropdown-trigger" id="job-dropdown-trigger" onclick="toggleJobDropdown()">
                                     <span id="job-selected-text" class="{{ $selectedText ? 'selected-text' : 'placeholder' }}">{{ $selectedText ?: 'Pilih' }}</span>
-                                    <i data-lucide="chevron-down" size="16" id="job-chevron"></i>
+                                    <svg id="job-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                                 </div>
                                 <div class="job-dropdown-panel" id="job-dropdown-panel">
                                     @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
@@ -93,13 +93,31 @@
                                 <span class="input-group-text bg-light border-end-0 d-flex align-items-center justify-content-center" style="width: 46px;">
                                     <i data-lucide="clock" size="18"></i>
                                 </span>
-                                <select name="shift" class="form-select form-control-custom border-start-0 shadow-none"
-                                    required>
+                                <select name="shift" id="shift-select" class="form-select form-control-custom border-start-0 shadow-none"
+                                    required onchange="onShiftChange()">
                                     <option value="">-- Pilih Shift --</option>
                                     <option value="1" {{ $data->shift == '1' ? 'selected' : '' }}>Shift 1 (Pagi)</option>
                                     <option value="2" {{ $data->shift == '2' ? 'selected' : '' }}>Shift 2 (Sore)</option>
                                     <option value="3" {{ $data->shift == '3' ? 'selected' : '' }}>Shift 3 (Malam)</option>
                                 </select>
+                            </div>
+                        </div>
+
+                        {{-- Tanggal --}}
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">
+                                Tanggal
+                                <span class="text-muted fw-normal ms-1" id="date-hint" style="font-size:0.7rem;"></span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 d-flex align-items-center justify-content-center" style="width: 46px;">
+                                    <i data-lucide="calendar" size="18"></i>
+                                </span>
+                                <input type="date" name="date" id="date-input"
+                                    class="form-control form-control-custom border-start-0 shadow-none"
+                                    value="{{ \Carbon\Carbon::parse($data->date)->format('Y-m-d') }}"
+                                    max="{{ date('Y-m-d') }}"
+                                    required>
                             </div>
                         </div>
 
@@ -234,6 +252,23 @@
         });
     }
     document.addEventListener('DOMContentLoaded', toggleRitase);
+
+    function onShiftChange() {
+        const shift     = document.getElementById('shift-select').value;
+        const dateInput = document.getElementById('date-input');
+        const hint      = document.getElementById('date-hint');
+        const today     = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+        const fmt = d => d.toISOString().split('T')[0];
+        if (shift === '3') {
+            dateInput.value  = fmt(yesterday);
+            hint.textContent = '(otomatis kemarin)';
+            hint.style.color = '#f59e0b';
+        } else {
+            hint.textContent = '';
+        }
+    }
 
     // Photo preview
     var photoInput = document.getElementById('photo-input');
