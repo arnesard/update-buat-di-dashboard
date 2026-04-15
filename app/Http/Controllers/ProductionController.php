@@ -406,11 +406,20 @@ class ProductionController extends Controller
 
         $request->validate($rules);
 
+        // Shift 3 (malam 23:00 - 07:00):
+        // Jika input dilakukan lewat tengah malam (jam 00:00-06:59),
+        // berarti masih bagian dari shift malam KEMARIN
+        $currentHour = Carbon::now()->hour;
+        $shiftValue  = (int) $request->shift;
+        $inputDate   = ($shiftValue === 3 && $currentHour >= 0 && $currentHour < 7)
+                        ? Carbon::yesterday()
+                        : Carbon::today();
+
         $data = [
             'employee_id'      => $request->employee_id,
             'shift'            => $request->shift,
             'ritase_result'    => $request->ritase_result ?? 0,
-            'date'             => Carbon::today(),
+            'date'             => $inputDate,
             'production_count' => $request->production_count ?? 0,
             'job_today'        => $jobTodayString,
             'notes'            => $request->notes
