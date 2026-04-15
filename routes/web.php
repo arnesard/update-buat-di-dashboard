@@ -25,6 +25,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/input/{plant}', [ProductionController::class, 'storeInput'])->name('input.store');
     Route::get('/production/{plant}/edit/{id}', [ProductionController::class, 'editInput'])->name('input.edit');
     Route::put('/production/{plant}/update/{id}', [ProductionController::class, 'updateInput'])->name('input.update');
+    Route::delete('/production/{plant}/delete/{id}', [ProductionController::class, 'deleteInput'])->name('input.delete');
 
     // Overtime management routes
     Route::get('/overtime', [OvertimeController::class, 'index'])->name('overtime.index');

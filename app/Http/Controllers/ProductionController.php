@@ -494,4 +494,21 @@ class ProductionController extends Controller
 
         return redirect()->route('input.form', $plant)->with('success', 'Data berhasil direvisi!');
     }
+
+    // 3. Fungsi hapus data produksi
+    public function deleteInput($plant, $id)
+    {
+        $reception = Reception::findOrFail($id);
+
+        // Hapus foto jika ada
+        if ($reception->photo && file_exists(public_path($reception->photo))) {
+            unlink(public_path($reception->photo));
+        }
+
+        $reception->delete();
+
+        Cache::flush();
+
+        return redirect()->route('input.form', $plant)->with('success', 'Data berhasil dihapus!');
+    }
 }

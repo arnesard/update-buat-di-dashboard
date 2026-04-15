@@ -471,10 +471,21 @@
                                             <div class="small text-muted">{{ $data->notes ?? '-' }}</div>
                                         </td>
                                         <td data-label="Aksi" class="col-aksi">
-                                            <a href="{{ route('input.edit', ['plant' => $plant ?? $data->emp_plant, 'id' => $data->id]) }}"
-                                                class="btn btn-sm btn-outline-warning rounded-pill px-3">
-                                                <i data-lucide="edit-3" size="12" class="me-1"></i> Edit
-                                            </a>
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ route('input.edit', ['plant' => $plant ?? $data->emp_plant, 'id' => $data->id]) }}"
+                                                    class="btn btn-sm btn-outline-warning rounded-pill px-2">
+                                                    <i data-lucide="edit-3" size="12"></i>
+                                                </a>
+                                                <form action="{{ route('input.delete', ['plant' => $plant ?? $data->emp_plant, 'id' => $data->id]) }}"
+                                                      method="POST" style="display:inline;"
+                                                      onsubmit="return confirm('Hapus data {{ $data->operator_name }}?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2">
+                                                        <i data-lucide="trash-2" size="12"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
