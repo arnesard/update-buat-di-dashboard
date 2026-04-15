@@ -356,12 +356,28 @@
                                 <label class="form-label small fw-bold text-uppercase text-muted">Shift</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0"><i data-lucide="clock" size="18"></i></span>
-                                    <select name="shift" class="form-select border-start-0 shadow-none" required>
+                                    <select name="shift" id="shift-select" class="form-select border-start-0 shadow-none" required onchange="onShiftChange()">
                                         <option value="">-- Pilih --</option>
                                         <option value="1">1 (Pagi)</option>
                                         <option value="2">2 (Sore)</option>
                                         <option value="3">3 (Malam)</option>
                                     </select>
+                                </div>
+                            </div>
+
+                            {{-- Tanggal Input --}}
+                            <div class="col-12 col-sm-6 col-md-3">
+                                <label class="form-label small fw-bold text-uppercase text-muted">
+                                    Tanggal
+                                    <span class="text-muted fw-normal ms-1" id="date-hint" style="font-size:0.7rem;"></span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i data-lucide="calendar" size="18"></i></span>
+                                    <input type="date" name="date" id="date-input"
+                                           class="form-control border-start-0 shadow-none"
+                                           value="{{ date('Y-m-d') }}"
+                                           max="{{ date('Y-m-d') }}"
+                                           required>
                                 </div>
                             </div>
 
@@ -619,6 +635,28 @@
                 document.getElementById('job-chevron').style.transform = '';
             }
         });
+
+        // === SHIFT → AUTO DATE ===
+        function onShiftChange() {
+            const shift     = document.getElementById('shift-select').value;
+            const dateInput = document.getElementById('date-input');
+            const hint      = document.getElementById('date-hint');
+
+            const today     = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+
+            const fmt = d => d.toISOString().split('T')[0];
+
+            if (shift === '3') {
+                dateInput.value = fmt(yesterday);
+                hint.textContent = '(otomatis kemarin)';
+                hint.style.color = '#f59e0b';
+            } else {
+                dateInput.value = fmt(today);
+                hint.textContent = '';
+            }
+        }
 
         // === TOGGLE: visual feedback checkbox ===
         function toggleRitase() {

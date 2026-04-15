@@ -398,18 +398,18 @@ class ProductionController extends Controller
             'job_today'        => 'required|array|min:1',
             'job_today.*'      => 'string|max:100',
             'shift'            => 'required|integer|in:1,2,3',
+            'date'             => 'required|date|before_or_equal:today',
             'notes'            => 'nullable|string|max:1000',
             'photo'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
-            'ritase_result'    => $onlyDriver  ? 'required|integer|min:0' : 'nullable|integer|min:0',
+            'ritase_result'    => 'nullable|integer|min:0',
             'production_count' => !$onlyDriver ? 'required|integer|min:0' : 'nullable|integer|min:0',
         ];
 
         $request->validate($rules);
 
-        // Shift 3 (malam) = selalu tanggal kemarin
-        // karena shift 3 adalah shift malam hari sebelumnya
-        $shiftValue = (int) $request->shift;
-        $inputDate  = $shiftValue === 3 ? Carbon::yesterday() : Carbon::today();
+        // Gunakan tanggal dari form (operator bisa pilih manual untuk input terlambat)
+        // Default sudah diset di view: hari ini untuk shift 1&2, kemarin untuk shift 3
+        $inputDate = $request->date ? Carbon::parse($request->date) : Carbon::today();
 
         $data = [
             'employee_id'      => $request->employee_id,
