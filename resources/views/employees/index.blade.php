@@ -209,6 +209,7 @@
                             <th class="px-4 py-3 border-0">Plant</th>
                             <th class="px-4 py-3 border-0">Group</th>
                             <th class="px-4 py-3 border-0">Status</th>
+                            <th class="px-4 py-3 border-0 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm">
@@ -238,10 +239,39 @@
                                     {{ $employee->default_status }}
                                 </span>
                             </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-warning rounded-pill px-2 py-1"
+                                        title="Edit"
+                                        onclick="openEditEmployee(
+                                            {{ $employee->id }},
+                                            '{{ addslashes($employee->name) }}',
+                                            '{{ $employee->employee_id }}',
+                                            '{{ $employee->plant }}',
+                                            '{{ $employee->group }}',
+                                            '{{ addslashes($employee->department) }}',
+                                            '{{ addslashes($employee->position) }}',
+                                            '{{ $employee->default_status }}',
+                                            '{{ $employee->primary_job_type }}',
+                                            '{{ $employee->hire_date }}',
+                                            '{{ $employee->phone }}',
+                                            '{{ addslashes($employee->address) }}'
+                                        )">
+                                        <i data-lucide="edit-3" size="13"></i>
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-sm btn-outline-danger rounded-pill px-2 py-1"
+                                        title="Hapus"
+                                        onclick="openDeleteEmployee({{ $employee->id }}, '{{ addslashes($employee->name) }}')">
+                                        <i data-lucide="trash-2" size="13"></i>
+                                    </button>
+                                </div>
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i data-lucide="users" class="mb-3 opacity-25" size="48"></i>
                                 <p class="mb-0">Belum ada karyawan terdaftar</p>
                             </td>
@@ -392,14 +422,39 @@ function openCreateEmployee() {
     document.getElementById('employeeForm').action = "{{ route('employees.store') }}";
     document.getElementById('employeeFormMethod').innerHTML = '';
     document.getElementById('employeeForm').reset();
-
     const hireDate = document.getElementById('emp_hire_date');
-    if (hireDate) {
-        hireDate.value = new Date().toISOString().split('T')[0];
-    }
-    if (window.lucide) {
-        lucide.createIcons();
-    }
+    if (hireDate) hireDate.value = new Date().toISOString().split('T')[0];
+    if (window.lucide) lucide.createIcons();
+}
+
+function openEditEmployee(id, name, employeeId, plant, group, department, position, defaultStatus, primaryJobType, hireDate, phone, address) {
+    document.getElementById('employeeModalTitle').textContent = 'Edit Karyawan';
+    document.getElementById('employeeModalDesc').textContent = 'Perbarui data karyawan';
+    document.getElementById('employeeForm').action = `/employees/${id}`;
+    document.getElementById('employeeFormMethod').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+
+    document.getElementById('emp_name').value           = name;
+    document.getElementById('emp_employee_id').value    = employeeId;
+    document.getElementById('emp_plant').value          = plant;
+    document.getElementById('emp_group').value          = group;
+    document.getElementById('emp_department').value     = department;
+    document.getElementById('emp_position').value       = position;
+    document.getElementById('emp_default_status').value = defaultStatus;
+    document.getElementById('emp_primary_job_type').value = primaryJobType;
+    document.getElementById('emp_hire_date').value      = hireDate;
+    document.getElementById('emp_phone').value          = phone || '';
+    document.getElementById('emp_address').value        = address || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('employeeModal'));
+    modal.show();
+    if (window.lucide) lucide.createIcons();
+}
+
+function openDeleteEmployee(id, name) {
+    document.getElementById('deleteEmployeeName').textContent = name;
+    document.getElementById('deleteEmployeeForm').action = `/employees/${id}`;
+    const modal = new bootstrap.Modal(document.getElementById('deleteEmployeeModal'));
+    modal.show();
 }
 
 function filterTable() {
