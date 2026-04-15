@@ -56,27 +56,33 @@
                         </div>
 
                         {{-- job hari ini --}}
-                        <div class="col-12">
+                        <div class="col-12 col-md-6">
                             <label class="form-label small fw-bold text-uppercase text-muted">
                                 Pekerjaan Hari Ini <span class="text-danger">*</span>
-                                <span class="text-muted fw-normal ms-1">(boleh lebih dari satu)</span>
                             </label>
                             @php
-                                $selectedJobs = array_map('trim', explode(',', $data->job_today ?? ''));
+                                $selectedJobs = array_filter(array_map('trim', explode(',', $data->job_today ?? '')));
+                                $selectedText = count($selectedJobs) ? implode(', ', $selectedJobs) : '';
                             @endphp
-                            <div class="border rounded-3 px-3 py-2" style="background:#f8fafc; max-height:130px; overflow-y:auto;">
-                                @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
-                                <label class="d-flex align-items-center gap-2 py-1 job-check-label" style="cursor:pointer;">
-                                    <input type="checkbox"
-                                           name="job_today[]"
-                                           value="{{ $job }}"
-                                           class="job-checkbox form-check-input mt-0"
-                                           {{ in_array($job, $selectedJobs) ? 'checked' : '' }}
-                                           onchange="toggleRitase()">
-                                    <span class="small">{{ $job }}</span>
-                                </label>
-                                @endforeach
-                                <div id="job-validation-msg" class="text-danger small" style="display:none;">&#9888; Pilih minimal satu!</div>
+                            <div class="job-dropdown-wrapper" id="job-dropdown-wrapper">
+                                <div class="job-dropdown-trigger" id="job-dropdown-trigger" onclick="toggleJobDropdown()">
+                                    <span id="job-selected-text" class="{{ $selectedText ? 'selected-text' : 'placeholder' }}">{{ $selectedText ?: 'Pilih' }}</span>
+                                    <i data-lucide="chevron-down" size="16" id="job-chevron"></i>
+                                </div>
+                                <div class="job-dropdown-panel" id="job-dropdown-panel">
+                                    @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
+                                    <label class="job-check-label">
+                                        <input type="checkbox"
+                                               name="job_today[]"
+                                               value="{{ $job }}"
+                                               class="job-checkbox form-check-input mt-0"
+                                               {{ in_array($job, $selectedJobs) ? 'checked' : '' }}
+                                               onchange="updateJobText(); toggleRitase();">
+                                        {{ $job }}
+                                    </label>
+                                    @endforeach
+                                    <div id="job-validation-msg" class="text-danger small mt-1" style="display:none;">&#9888; Pilih minimal satu!</div>
+                                </div>
                             </div>
                         </div>
 
@@ -158,20 +164,75 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    /* Job Dropdown Multiselect */
+    .job-dropdown-wrapper { position: relative; }
+    .job-dropdown-trigger {
+        display: flex; align-items: center; justify-content: space-between;
+        background: #fff; border: 1.5px solid #dee2e6; border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem; cursor: pointer; min-height: 42px;
+        transition: border-color 0.2s; user-select: none;
+    }
+    .job-dropdown-trigger:hover, .job-dropdown-trigger.open { border-color: #0d6efd; }
+    .job-dropdown-trigger .placeholder { color: #adb5bd; font-size: 0.875rem; }
+    .job-dropdown-trigger .selected-text { font-size: 0.8rem; color: #1e293b; font-weight: 500; }
+    .job-dropdown-panel {
+        display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+        background: #fff; border: 1.5px solid #0d6efd; border-radius: 0.5rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 200;
+        padding: 0.5rem 0.75rem; max-height: 220px; overflow-y: auto;
+    }
+    .job-dropdown-panel.open { display: block; }
+    .job-check-label {
+        display: flex; align-items: center; gap: 8px;
+        padding: 5px 4px; cursor: pointer; border-radius: 6px;
+        font-size: 0.875rem; transition: background 0.15s;
+    }
+    .job-check-label:hover { background: #f0f9ff; }
+    .job-check-label:has(input:checked) { color: #0369a1; font-weight: 600; }
+</style>
+@endpush
+
 @push('scripts')
 <script>
+    function toggleJobDropdown() {
+        const panel   = document.getElementById('job-dropdown-panel');
+        const trigger = document.getElementById('job-dropdown-trigger');
+        const chevron = document.getElementById('job-chevron');
+        const isOpen  = panel.classList.contains('open');
+        panel.classList.toggle('open');
+        trigger.classList.toggle('open');
+        chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+    }
+    function updateJobText() {
+        const checked = document.querySelectorAll('.job-checkbox:checked');
+        const textEl  = document.getElementById('job-selected-text');
+        if (checked.length === 0) {
+            textEl.textContent = 'Pilih';
+            textEl.className   = 'placeholder';
+        } else {
+            textEl.textContent = Array.from(checked).map(c => c.value).join(', ');
+            textEl.className   = 'selected-text';
+        }
+    }
+    document.addEventListener('click', function(e) {
+        const wrapper = document.getElementById('job-dropdown-wrapper');
+        if (wrapper && !wrapper.contains(e.target)) {
+            document.getElementById('job-dropdown-panel').classList.remove('open');
+            document.getElementById('job-dropdown-trigger').classList.remove('open');
+            document.getElementById('job-chevron').style.transform = '';
+        }
+    });
     function toggleRitase() {
-        // Visual feedback checkbox saja
         document.querySelectorAll('.job-checkbox').forEach(cb => {
             const label = cb.closest('.job-check-label');
             if (label) {
-                label.style.background  = cb.checked ? '#e0f2fe' : '';
-                label.style.borderColor = cb.checked ? '#0ea5e9' : '';
-                label.style.color       = cb.checked ? '#0369a1' : '';
+                label.style.background = cb.checked ? '#e0f2fe' : '';
+                label.style.color      = cb.checked ? '#0369a1' : '';
             }
         });
     }
-
     document.addEventListener('DOMContentLoaded', toggleRitase);
 
     // Photo preview
