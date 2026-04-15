@@ -79,6 +79,16 @@
         }
         .job-dropdown-trigger .placeholder { color: #adb5bd; font-size: 0.875rem; }
         .job-dropdown-trigger .selected-text { font-size: 0.8rem; color: #1e293b; font-weight: 500; }
+        .job-arrow {
+            width: 0; height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid #6c757d;
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+        .job-dropdown-trigger.open .job-arrow { transform: rotate(180deg); }
+        .job-checkbox { accent-color: #0d6efd; width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; }
         .job-dropdown-panel {
             display: none;
             position: absolute;
@@ -334,7 +344,7 @@
                                 <div class="job-dropdown-wrapper" id="job-dropdown-wrapper">
                                     <div class="job-dropdown-trigger" id="job-dropdown-trigger" onclick="toggleJobDropdown()">
                                         <span id="job-selected-text" class="placeholder">Pilih</span>
-                                        <svg id="job-chevron" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.2s;flex-shrink:0;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                        <span class="job-arrow"></span>
                                     </div>
                                     <div class="job-dropdown-panel" id="job-dropdown-panel">
                                         @foreach(['Scan','Strapping','Tempel Stiker','Susun Tire','Pressing','Driver','Leader','Pasang Product Tage OE'] as $job)
@@ -342,7 +352,7 @@
                                             <input type="checkbox"
                                                    name="job_today[]"
                                                    value="{{ $job }}"
-                                                   class="job-checkbox form-check-input mt-0"
+                                                   class="job-checkbox"
                                                    onchange="updateJobText(); toggleRitase();">
                                             {{ $job }}
                                         </label>
@@ -607,11 +617,8 @@
         function toggleJobDropdown() {
             const panel   = document.getElementById('job-dropdown-panel');
             const trigger = document.getElementById('job-dropdown-trigger');
-            const chevron = document.getElementById('job-chevron');
-            const isOpen  = panel.classList.contains('open');
             panel.classList.toggle('open');
             trigger.classList.toggle('open');
-            chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
         }
 
         function updateJobText() {
