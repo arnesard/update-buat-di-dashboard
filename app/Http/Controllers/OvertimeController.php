@@ -53,37 +53,44 @@ class OvertimeController extends Controller
     
     public function approve(OvertimeData $overtime)
     {
+        if (auth()->user()->isLeader()) {
+            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menyetujui lembur.');
+        }
+
         $overtime->update([
-            'status' => 'approved',
+            'status'      => 'approved',
             'approved_by' => auth()->id(),
-            'notes' => 'Disetujui oleh ' . auth()->user()->name,
+            'notes'       => 'Disetujui oleh ' . auth()->user()->name,
         ]);
-        
-        return redirect()->route('overtime.index')
-            ->with('success', 'Pengajuan lembur disetujui!');
+
+        return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur disetujui!');
     }
-    
+
     public function reject(Request $request, OvertimeData $overtime)
     {
-        $request->validate([
-            'notes' => 'required|string|max:1000',
-        ]);
-        
+        if (auth()->user()->isLeader()) {
+            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menolak lembur.');
+        }
+
+        $request->validate(['notes' => 'required|string|max:1000']);
+
         $overtime->update([
-            'status' => 'rejected',
+            'status'      => 'rejected',
             'approved_by' => auth()->id(),
-            'notes' => 'Ditolak: ' . $request->notes,
+            'notes'       => 'Ditolak: ' . $request->notes,
         ]);
-        
-        return redirect()->route('overtime.index')
-            ->with('success', 'Pengajuan lembur ditolak!');
+
+        return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur ditolak!');
     }
-    
+
     public function destroy(OvertimeData $overtime)
     {
+        if (auth()->user()->isLeader()) {
+            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menghapus data lembur.');
+        }
+
         $overtime->delete();
-        
-        return redirect()->route('overtime.index')
-            ->with('success', 'Pengajuan lembur dihapus!');
+
+        return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur dihapus!');
     }
 }

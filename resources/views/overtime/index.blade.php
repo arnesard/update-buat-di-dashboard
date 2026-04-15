@@ -310,23 +310,25 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <p class="text-xs text-slate-400 mb-0">Diajukan: {{ $ot->created_at->format('H:i') }}</p>
                                 <div class="d-flex gap-2 no-print">
-                                    @if($ot->status == 'pending')
-                                    <form action="{{ route('overtime.approve', $ot) }}" method="POST">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0" title="Setujui">
-                                            <i data-lucide="check" size="14"></i>
+                                    @if(!auth()->user()->isLeader())
+                                        @if($ot->status == 'pending')
+                                        <form action="{{ route('overtime.approve', $ot) }}" method="POST">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0" title="Setujui">
+                                                <i data-lucide="check" size="14"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="openRejectModal({{ $ot->id }}, '{{ $ot->employee_name }}')">
+                                            <i data-lucide="x" size="14"></i>
                                         </button>
-                                    </form>
-                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="openRejectModal({{ $ot->id }}, '{{ $ot->employee_name }}')">
-                                        <i data-lucide="x" size="14"></i>
-                                    </button>
+                                        @endif
+                                        <form action="{{ route('overtime.destroy', $ot) }}" method="POST">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" onclick="return confirm('Hapus data?')">
+                                                <i data-lucide="trash-2" size="14"></i>
+                                            </button>
+                                        </form>
                                     @endif
-                                    <form action="{{ route('overtime.destroy', $ot) }}" method="POST">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" onclick="return confirm('Hapus data?')">
-                                            <i data-lucide="trash-2" size="14"></i>
-                                        </button>
-                                    </form>
                                 </div>
                             </div>
                         </div>
