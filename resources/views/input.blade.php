@@ -27,15 +27,7 @@
             transition: transform 0.1s ease;
         }
         
-        /* Class untuk sembunyikan input ritase di form */
-        .ritase-form-group {
-            display: none;
-        }
-        .ritase-form-group.show-ritase {
-            display: block;
-        }
 
-        @php $hasDriver = false; @endphp
 
         /* Definitive Alignment Fix */
         .monitoring-table {
@@ -175,11 +167,7 @@
         #lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
         @media (max-width: 768px) {
-            @if($hasDriver)
-            .ritase-col {
-                display: flex !important;
-            }
-            @endif
+
 
             .table-responsive thead {
                 display: none; 
@@ -639,7 +627,6 @@
             if (wrapper && !wrapper.contains(e.target)) {
                 document.getElementById('job-dropdown-panel').classList.remove('open');
                 document.getElementById('job-dropdown-trigger').classList.remove('open');
-                document.getElementById('job-chevron').style.transform = '';
             }
         });
 
