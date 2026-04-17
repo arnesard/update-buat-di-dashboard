@@ -636,11 +636,22 @@
             const dateInput = document.getElementById('date-input');
             const hint      = document.getElementById('date-hint');
 
-            const today     = new Date();
-            const yesterday = new Date(today);
-            yesterday.setDate(today.getDate() - 1);
+            // Ambil waktu dari server Laravel (WIB) langsung
+            const now       = new Date("{{ now()->setTimezone('Asia/Jakarta')->toIso8601String() }}");
+            const hour      = now.getHours();
+            
+            const today     = new Date(now);
+            const yesterday = new Date(now);
+            yesterday.setDate(now.getDate() - 1);
 
-            const fmt = d => d.toISOString().split('T')[0];
+            // Fungsi format ke YYYY-MM-DD menggunakan Local Time. 
+            // JANGAN gunakan toISOString() karena akan mengkonversi ke UTC (dikurangi 7 jam dari WIB)
+            const fmt = d => {
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            };
 
             if (shift === '3') {
                 dateInput.value = fmt(yesterday);
