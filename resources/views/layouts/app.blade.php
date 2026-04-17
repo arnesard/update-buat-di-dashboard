@@ -440,7 +440,7 @@
 
     {{-- ═══ MAIN CONTENT ═══ --}}
     <main id="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 no-print">
             <h3 class="fw-bold">@yield('page_title')</h3>
         </div>
 

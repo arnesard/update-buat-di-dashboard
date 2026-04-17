@@ -65,16 +65,92 @@
     .badge-status-approved { background-color: #dcfce7; color: #16a34a; }
     .badge-status-rejected { background-color: #fee2e2; color: #dc2626; }
 
+    /* Hidden on screen, shown only when printing */
+    .print-only { display: none; }
+
     @media print {
+        @page { size: portrait; margin: 1.5cm 1cm; }
+
+        body { padding: 0 !important; margin: 0 !important; background: white !important; color: #000 !important; }
         .no-print { display: none !important; }
-        .print-full-width { width: 100% !important; flex: 0 0 100% !important; max-width: 100% !important; }
-        .print-no-border { border: none !important; box-shadow: none !important; }
-        .print-no-margin { margin: 0 !important; }
-        .print-border-bottom { border-bottom: 1px solid #e2e8f0 !important; border-radius: 0 !important; }
-        .overtime-list { max-height: none !important; overflow: visible !important; }
-        .overtime-record { break-inside: avoid; }
-        body { padding: 0 !important; }
-        .p-3, .p-md-4 { padding: 0 !important; }
+        .print-only { display: block !important; margin-bottom: 8px !important; }
+
+        /* ── Strip ALL wrappers that add width/margin/padding ── */
+        .max-w-7xl {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .mx-auto { margin-left: 0 !important; margin-right: 0 !important; }
+        .p-3, .p-md-4, .p-4 { padding: 0 !important; }
+        .mt-4, .mt-2 { margin-top: 0 !important; }
+
+        /* ── KEY FIX: Bootstrap g-4 row has negative margins; col has padding ── */
+        .row {
+            --bs-gutter-x: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        .col-12, [class*="col-"] {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+
+        /* ── Card cleanup ── */
+        #print-table-section .card,
+        #print-table-section .card-body,
+        #print-table-section .card-header,
+        #print-table-section .table-responsive {
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* ── Table ── */
+        #print-table-section .table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            table-layout: fixed !important;
+            margin: 0 !important;
+        }
+
+        /* Column widths: Karyawan 38%, Tanggal 14%, Waktu 14%, Pekerjaan 34% */
+        #print-table-section .table th:nth-child(1),
+        #print-table-section .table td:nth-child(1) { width: 38% !important; }
+        #print-table-section .table th:nth-child(2),
+        #print-table-section .table td:nth-child(2) { width: 14% !important; }
+        #print-table-section .table th:nth-child(3),
+        #print-table-section .table td:nth-child(3) { width: 14% !important; }
+        #print-table-section .table th:nth-child(4),
+        #print-table-section .table td:nth-child(4) { width: 34% !important; }
+
+        #print-table-section .table th,
+        #print-table-section .table td {
+            padding: 2px 5px !important;
+            border: 1px solid #64748b !important;
+            font-size: 9px !important;
+            word-break: break-word !important;
+            overflow: hidden !important;
+            line-height: 1.3 !important;
+        }
+        #print-table-section .table th {
+            background-color: #e2e8f0 !important;
+            font-weight: bold !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* Remove Bootstrap's py-3 tall row padding when printing */
+        #print-table-section .table td.py-3,
+        #print-table-section .table td[class*="py-"] {
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
+        }
+
+        tr.overtime-row { break-inside: avoid; }
     }
 </style>
 @endpush
@@ -82,23 +158,17 @@
 @section('content')
 <div class="p-3 p-md-4 max-w-7xl mx-auto">
     {{-- Header --}}
-    <div class="mb-4 d-flex justify-content-between align-items-center">
+    <div class="mb-4 d-flex justify-content-between align-items-center no-print">
         <div>
             <h1 class="h3 fw-bold text-slate-900 mb-1">Pengajuan Lembur</h1>
-            <p class="text-slate-600 no-print">Catat dan monitor jam lembur karyawan</p>
-        </div>
-        <div class="no-print">
-            <button onclick="window.print()" class="btn btn-outline-primary rounded-pill px-4 fw-bold">
-                <i data-lucide="printer" class="me-2" size="18"></i> Cetak Laporan
-            </button>
+            <p class="text-slate-600 mb-0">Catat dan monitor jam lembur karyawan</p>
         </div>
     </div>
 
     {{-- Print Only Header --}}
-    <div class="d-none d-print-block mb-5 text-center">
-        <h2 class="fw-bold mb-1">LAPORAN PENGAJUAN LEMBUR</h2>
-        <p class="text-muted">Periode: {{ now()->translatedFormat('F Y') }}</p>
-        <hr>
+    <div class="print-only text-center">
+        <h5 class="fw-bold mb-1" style="font-size: 15px; text-decoration: underline; letter-spacing: 0.5px;">LAPORAN PENGAJUAN LEMBUR</h5>
+        <p style="font-size: 11px; color: #475569; margin-bottom: 6px;">Periode: {{ now()->translatedFormat('F Y') }}</p>
     </div>
 
     {{-- Stats Cards --}}
@@ -161,9 +231,9 @@
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mt-2">
         {{-- Form Input --}}
-        <div class="col-12 col-lg-5 no-print">
+        <div class="col-12 col-lg-8 mx-auto no-print">
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-body p-4">
                     <h5 class="fw-bold text-slate-900 mb-3">Form Pengajuan Lembur</h5>
@@ -238,8 +308,8 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold small">Alasan *</label>
-                            <textarea name="reason" class="form-control form-control-custom" rows="4" placeholder="Contoh: Target produksi belum tercapai..." required></textarea>
+                            <label class="form-label fw-semibold small">Job *</label>
+                            <textarea name="reason" class="form-control form-control-custom" rows="4" placeholder="Contoh: Bongkar muat barang tipe A..." required></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm" style="background-color: var(--sky-500); border: none;">
@@ -251,11 +321,56 @@
         </div>
 
         {{-- Overtime List --}}
-        <div class="col-12 col-lg-7 print-full-width">
+        <div class="col-12 print-full-width mt-4" id="print-table-section">
             <div class="card border-0 shadow-sm rounded-4 print-no-border">
-                <div class="card-header bg-white border-bottom-0 p-4 pb-0 no-print">
-                    <h5 class="fw-bold text-slate-900 mb-1">Daftar Lembur Bulan Ini</h5>
-                    <p class="text-xs text-muted mb-0">Pengajuan lembur yang tercatat</p>
+                <div class="card-header bg-white border-bottom-0 p-4 no-print">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <h5 class="fw-bold text-slate-900 mb-1">Laporan Pengajuan Lembur</h5>
+                            <p class="text-xs text-muted mb-0">Antrean persetujuan dan riwayat lembur</p>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button onclick="window.print()" class="btn btn-sm btn-outline-primary fw-bold px-3 shadow-sm" style="border-radius: 0.5rem;">
+                                <i data-lucide="printer" size="14" class="me-1"></i> Cetak
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {{-- Filter Form & Search --}}
+                    <div class="bg-light p-3 rounded-3 border">
+                        <div class="row g-3 align-items-end">
+                            {{-- JS Search --}}
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-slate-600 mb-1" style="font-size: 13px;">Pencarian Cepat</label>
+                                <div class="position-relative">
+                                    <input type="text" class="form-control border-0 shadow-sm pe-4" id="searchOvertime" placeholder="Cari nama karyawan..." onkeyup="searchOvertimeTable()">
+                                    <i data-lucide="search" class="position-absolute text-muted" style="right: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;" size="16"></i>
+                                </div>
+                            </div>
+                            
+                            {{-- AJAX Date Filter --}}
+                            <div class="col-md-8">
+                                <form id="filterForm" action="{{ route('overtime.index') }}" method="GET" class="row g-2 align-items-end m-0">
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-bold text-slate-600 mb-1" style="font-size: 13px;">Dari Tanggal</label>
+                                        <input type="date" name="start_date" class="form-control border-0 shadow-sm" value="{{ $startDate ?? now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label class="form-label fw-bold text-slate-600 mb-1" style="font-size: 13px;">Sampai Tanggal</label>
+                                        <input type="date" name="end_date" class="form-control border-0 shadow-sm" value="{{ $endDate ?? now()->format('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-sm-4 d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary flex-grow-1 fw-bold shadow-sm" style="border-radius: 0.5rem;">
+                                            Search
+                                        </button>
+                                        <button type="button" id="resetFilterBtn" class="btn btn-outline-secondary fw-bold shadow-sm" title="Reset" style="border-radius: 0.5rem;">
+                                            <i data-lucide="rotate-ccw" size="16" class="me-1"></i> Reset
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body p-4">
                     @php
@@ -264,80 +379,21 @@
                             return [trim(strtoupper($emp->name)) => $emp->employee_id];
                         });
                     @endphp
-                    <div class="overtime-list overflow-visible">
-                        @forelse($overtimes as $ot)
-                        @php
-                            $normalizedName = trim(strtoupper($ot->employee_name));
-                            $displayId = $employeeMap[$normalizedName] ?? null;
-                            $isApproved = $ot->status == 'approved';
-                        @endphp
-                        <div class="overtime-record p-4 mb-3 print-no-margin print-border-bottom">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                        <p class="fw-bold text-slate-900 mb-0 {{ !$isApproved ? 'd-print-none' : '' }}">{{ $ot->employee_name }}</p>
-                                        @if(!$isApproved)
-                                            <p class="fw-bold text-muted mb-0 d-none d-print-block"><em>[Nama Tersembunyi - Belum Disetujui]</em></p>
-                                        @endif
-                                        @if($displayId)
-                                        <span class="badge bg-primary bg-opacity-10 text-primary border-0 rounded-pill text-xs fw-bold px-2 py-1 {{ !$isApproved ? 'd-print-none' : '' }}" style="font-size: 0.65rem;">
-                                            {{ $displayId }}
-                                        </span>
-                                        @endif
-                                    </div>
-                                    <p class="text-xs text-slate-500 mb-0">
-                                        {{ $ot->overtime_date->translatedFormat('l, d F Y') }}
-                                    </p>
-                                </div>
-                                <div class="text-end">
-                                    <div class="small fw-bold text-slate-900">
-                                        @php
-                                            $start = \Carbon\Carbon::parse($ot->start_time);
-                                            $end = \Carbon\Carbon::parse($ot->end_time);
-                                            if ($end->lt($start)) $end->addDay();
-                                            $gross = $start->diffInHours($end);
-                                            echo min(7, $gross);
-                                        @endphp Jam
-                                    </div>
-                                    <div class="text-xs text-muted">{{ \Carbon\Carbon::parse($ot->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($ot->end_time)->format('H:i') }}</div>
-                                    <span class="badge badge-status-{{ $ot->status }} rounded-pill px-2 py-1 text-xs fw-bold mt-1">
-                                        {{ ucfirst($ot->status == 'pending' ? 'Menunggu' : ($ot->status == 'approved' ? 'Disetujui' : 'Ditolak')) }}
-                                    </span>
-                                </div>
-                            </div>
-                            <p class="text-sm text-slate-600 mb-3">{{ $ot->reason }}</p>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <p class="text-xs text-slate-400 mb-0">Diajukan: {{ $ot->created_at->format('H:i') }}</p>
-                                <div class="d-flex gap-2 no-print">
-                                    @if(!auth()->user()->isLeader())
-                                        @if($ot->status == 'pending')
-                                        <form action="{{ route('overtime.approve', $ot) }}" method="POST">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-2 py-0" title="Setujui">
-                                                <i data-lucide="check" size="14"></i>
-                                            </button>
-                                        </form>
-                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0" data-bs-toggle="modal" data-bs-target="#rejectModal" onclick="openRejectModal({{ $ot->id }}, '{{ $ot->employee_name }}')">
-                                            <i data-lucide="x" size="14"></i>
-                                        </button>
-                                        @endif
-                                        <form action="{{ route('overtime.destroy', $ot) }}" method="POST">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0" onclick="return confirm('Hapus data?')">
-                                                <i data-lucide="trash-2" size="14"></i>
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="text-center py-5 text-slate-400">
-                            <i data-lucide="clock" class="opacity-25 mb-3" size="48"></i>
-                            <p>Belum ada pengajuan lembur bulan ini</p>
-                        </div>
-                        @endforelse
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" id="overtimeTable">
+                            <thead style="background: var(--slate-50);">
+                                <tr>
+                                    <th class="text-slate-600 font-semibold small border-bottom-0 py-3 rounded-start">Karyawan</th>
+                                    <th class="text-slate-600 font-semibold small border-bottom-0 py-3">Tanggal</th>
+                                    <th class="text-slate-600 font-semibold small border-bottom-0 py-3">Waktu</th>
+                                    <th class="text-slate-600 font-semibold small border-bottom-0 py-3">Pekerjaan</th>
+                                    <th class="text-slate-600 font-semibold small border-bottom-0 py-3 text-end no-print rounded-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="overtimeTableBody" style="transition: opacity 0.2s;">
+                                @include('overtime._table_body')
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -345,23 +401,40 @@
     </div>
 </div>
 
-{{-- Reject Modal --}}
-<div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+{{-- Edit Modal --}}
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header border-bottom-0 p-4 pb-0">
-                <h5 class="fw-bold">Tolak Lembur</h5>
+                <h5 class="fw-bold">Edit Lembur <span id="editEmployeeName" class="text-primary"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="rejectForm" method="POST">
-                @csrf @method('PATCH')
+            <form id="editForm" method="POST" class="ajax-action-form" data-action-type="edit">
+                @csrf @method('PUT')
                 <div class="modal-body p-4">
-                    <p class="text-sm text-slate-600 mb-4">Alasan penolakan untuk <strong id="rejectEmployeeName"></strong>:</p>
-                    <textarea name="notes" class="form-control form-control-custom" rows="3" placeholder="Masukkan alasan penolakan..." required></textarea>
+                    <input type="hidden" name="employee_name" id="edit_employee_name">
+                    <div class="mb-3">
+                        <label class="form-label text-xs fw-bold text-slate-600 mb-1">Tanggal Lembur *</label>
+                        <input type="date" name="overtime_date" id="edit_overtime_date" class="form-control form-control-sm border-0 shadow-sm bg-light" required>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-xs fw-bold text-slate-600 mb-1">Mulai *</label>
+                            <input type="time" name="start_time" id="edit_start_time" class="form-control form-control-sm border-0 shadow-sm bg-light" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-xs fw-bold text-slate-600 mb-1">Selesai *</label>
+                            <input type="time" name="end_time" id="edit_end_time" class="form-control form-control-sm border-0 shadow-sm bg-light" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-xs fw-bold text-slate-600 mb-1">Job *</label>
+                        <textarea name="reason" id="edit_reason" class="form-control form-control-sm border-0 shadow-sm bg-light" rows="3" required></textarea>
+                    </div>
                 </div>
                 <div class="modal-footer border-top-0 p-4 pt-0">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold">Tolak</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Simpan</button>
                 </div>
             </form>
         </div>
@@ -371,10 +444,6 @@
 
 @push('scripts')
 <script>
-    function openRejectModal(id, name) {
-        document.getElementById('rejectEmployeeName').textContent = name;
-        document.getElementById('rejectForm').action = `/overtime/${id}/reject`;
-    }
 
     function calculateDuration() {
         const start = document.getElementById('start_time').value;
@@ -486,6 +555,132 @@
             }
         });
     })();
+
+    function searchOvertimeTable() {
+        var input = document.getElementById('searchOvertime').value.toLowerCase();
+        var rows = document.querySelectorAll('#overtimeTable tbody tr.overtime-row');
+        rows.forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(input) ? '' : 'none';
+        });
+    }
+
+    function openEditModal(id, name, date, start_time, end_time, reason) {
+        document.getElementById('editEmployeeName').textContent = name;
+        document.getElementById('editForm').action = `/overtime/${id}`;
+        document.getElementById('editForm').dataset.rowId = id;
+        
+        document.getElementById('edit_employee_name').value = name;
+        document.getElementById('edit_overtime_date').value = date;
+        document.getElementById('edit_start_time').value = start_time.substring(0, 5);
+        document.getElementById('edit_end_time').value = end_time.substring(0, 5);
+        document.getElementById('edit_reason').value = reason;
+    }
+
+    // === AJAX ACTIONS (Edit, Delete) ===
+    document.addEventListener('submit', function(e) {
+        if (e.target && e.target.classList.contains('ajax-action-form')) {
+            e.preventDefault();
+            const form = e.target;
+            const actionUrl = form.action;
+            const method = form.querySelector('input[name="_method"]')?.value || form.method;
+            const formData = new FormData(form);
+            const rowId = form.dataset.rowId;
+            const actionType = form.dataset.actionType;
+            const btn = form.querySelector('button[type="submit"]');
+
+            if(btn) {
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+            }
+
+            fetch(actionUrl, {
+                method: 'POST', // Always POST for Laravel, we use _method for PUT/PATCH/DELETE
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.getElementById(`row-${rowId}`);
+                    if (actionType === 'delete') {
+                        if (row) row.remove();
+                    } else if (actionType === 'edit') {
+                        // Close Modal and reload table data perfectly
+                        loadFilteredData();
+                        const modalEl = document.getElementById('editModal');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+                } else {
+                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan.'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan jaringan.');
+            })
+            .finally(() => {
+                if(btn) {
+                    btn.disabled = false;
+                    if (actionType === 'edit') {
+                        btn.innerHTML = 'Simpan';
+                    }
+                }
+            });
+        }
+    });
+
+    // === AJAX FILTER ===
+    const filterForm = document.getElementById('filterForm');
+    const tableBody = document.getElementById('overtimeTableBody');
+    const resetBtn = document.getElementById('resetFilterBtn');
+
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadFilteredData();
+        });
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                filterForm.querySelector('input[name="start_date"]').value = '{{ now()->format("Y-m-d") }}';
+                filterForm.querySelector('input[name="end_date"]').value = '{{ now()->format("Y-m-d") }}';
+                loadFilteredData();
+            });
+        }
+        
+        function loadFilteredData() {
+            const formData = new FormData(filterForm);
+            const queryParams = new URLSearchParams(formData).toString();
+            const fetchUrl = filterForm.action + '?' + queryParams + '&filter_request=1';
+            
+            tableBody.style.opacity = '0.5';
+
+            fetch(fetchUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'text/html'
+                }
+            })
+            .then(res => res.text())
+            .then(html => {
+                tableBody.innerHTML = html;
+                tableBody.style.opacity = '1';
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                tableBody.style.opacity = '1';
+                alert('Gagal memuat data!');
+            });
+        }
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         if (window.lucide) {

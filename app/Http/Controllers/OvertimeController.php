@@ -9,17 +9,34 @@ use Carbon\Carbon;
 
 class OvertimeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $overtimes = OvertimeData::with('approver:id,name')
-            ->select('id', 'employee_name', 'overtime_date', 'start_time', 'end_time', 'reason', 'status', 'notes', 'approved_by', 'created_at', 'updated_at')
-            ->orderBy('overtime_date', 'desc')
-            ->limit(500)
-            ->get();
+        $startDate = $request->input('start_date', Carbon::today()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::today()->format('Y-m-d'));
+
+        $query = OvertimeData::select('id', 'employee_name', 'overtime_date', 'start_time', 'end_time', 'reason', 'created_at', 'updated_at');
+
+        if ($startDate) {
+            $query->whereDate('overtime_date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('overtime_date', '<=', $endDate);
+        }
+
+        $overtimes = $query->orderBy('overtime_date', 'desc')
+                           ->orderBy('created_at', 'desc')
+                           ->get();
 
         $employees = Employee::orderBy('name')->get();
+        $employeeMap = $employees->mapWithKeys(function ($emp) {
+            return [trim(strtoupper($emp->name)) => $emp->employee_id];
+        });
 
-        return view('overtime.index', compact('overtimes', 'employees'));
+        if ($request->ajax() && $request->has('filter_request')) {
+            return view('overtime._table_body', compact('overtimes', 'employeeMap'))->render();
+        }
+
+        return view('overtime.index', compact('overtimes', 'employees', 'startDate', 'endDate', 'employeeMap'));
     }
     
     public function create()
@@ -51,46 +68,34 @@ class OvertimeController extends Controller
             ->with('success', 'Pengajuan lembur berhasil dikirim!');
     }
     
-    public function approve(OvertimeData $overtime)
+    public function update(Request $request, OvertimeData $overtime)
     {
-        if (auth()->user()->isLeader()) {
-            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menyetujui lembur.');
-        }
-
-        $overtime->update([
-            'status'      => 'approved',
-            'approved_by' => auth()->id(),
-            'notes'       => 'Disetujui oleh ' . auth()->user()->name,
+        $request->validate([
+            'employee_name' => 'required|string|max:255',
+            'overtime_date' => 'required|date',
+            'start_time' => 'required|date_format:H:i:s,H:i',
+            'end_time' => 'required|date_format:H:i:s,H:i',
+            'reason' => 'required|string|max:1000',
         ]);
 
-        return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur disetujui!');
-    }
-
-    public function reject(Request $request, OvertimeData $overtime)
-    {
-        if (auth()->user()->isLeader()) {
-            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menolak lembur.');
-        }
-
-        $request->validate(['notes' => 'required|string|max:1000']);
-
         $overtime->update([
-            'status'      => 'rejected',
-            'approved_by' => auth()->id(),
-            'notes'       => 'Ditolak: ' . $request->notes,
+            'employee_name' => $request->employee_name,
+            'overtime_date' => $request->overtime_date,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'reason' => $request->reason,
         ]);
 
-        return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur ditolak!');
+        if ($request->wantsJson()) return response()->json(['success' => true, 'message' => 'Data lembur berhasil diperbarui!']);
+        return redirect()->route('overtime.index')->with('success', 'Data lembur berhasil diperbarui!');
     }
 
-    public function destroy(OvertimeData $overtime)
+    public function destroy(Request $request, OvertimeData $overtime)
     {
-        if (auth()->user()->isLeader()) {
-            return redirect()->route('overtime.index')->with('error', 'Anda tidak memiliki akses untuk menghapus data lembur.');
-        }
 
         $overtime->delete();
 
+        if ($request->wantsJson()) return response()->json(['success' => true, 'message' => 'Dihapus.']);
         return redirect()->route('overtime.index')->with('success', 'Pengajuan lembur dihapus!');
     }
 }

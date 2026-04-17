@@ -331,7 +331,7 @@
                                 </label>
                                 <div class="job-dropdown-wrapper" id="job-dropdown-wrapper">
                                     <div class="job-dropdown-trigger" id="job-dropdown-trigger" onclick="toggleJobDropdown()">
-                                        <span id="job-selected-text" class="placeholder">Pilih</span>
+                                        <span id="job-selected-text">Pilih</span>
                                         <span class="job-arrow"></span>
                                     </div>
                                     <div class="job-dropdown-panel" id="job-dropdown-panel">

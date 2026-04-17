@@ -12,7 +12,7 @@
 </div>
 
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 rounded-4">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
@@ -27,7 +27,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 rounded-4">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">
@@ -42,22 +42,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm h-100 rounded-4">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <p class="text-muted small fw-bold text-uppercase mb-1">Total Ritase</p>
-                            <h3 class="fw-bold mb-0">{{ number_format($totalRitase) }}</h3>
-                        </div>
-                        <div class="rounded-3 p-3 bg-warning bg-opacity-10 text-warning">
-                            <i data-lucide="truck" size="24"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 rounded-4">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-center justify-content-between">

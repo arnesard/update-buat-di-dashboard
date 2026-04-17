@@ -266,8 +266,8 @@ class ReportController extends Controller
         $overtimes = $this->getFilteredOvertimes($filterType, $plant_filter, $group_filter, $start_date, $end_date, $start_month, $end_month, $year);
 
         return Excel::download(
-            new ReportsExport($receptions, $overtimes), 
-            'laporan_receiving_' . $filterType . '_' . date('Y-m-d') . '.xlsx'
+            new \App\Exports\ProductionExport($receptions), 
+            'laporan_produksi_' . $filterType . '_' . date('Y-m-d') . '.xlsx'
         );
     }
 }

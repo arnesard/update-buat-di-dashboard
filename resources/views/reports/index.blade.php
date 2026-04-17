@@ -256,8 +256,10 @@
             </div>
         </div>
         <div class="d-flex gap-2 no-print">
-            <button class="btn btn-outline-primary rounded-pill px-4 fw-bold transition-all hover-lift" onclick="window.print()" type="button">
-                <i data-lucide="printer" class="me-2" size="18"></i> Cetak Laporan
+            <button onclick="exportTableToExcel()" 
+                    class="btn btn-success rounded-pill px-4 fw-bold transition-all hover-lift"
+                    type="button">
+                <i data-lucide="download" class="me-2" size="18"></i> Export Excel
             </button>
         </div>
     </div>
@@ -431,7 +433,7 @@
                             'shift'      => $reception->shift,
                             'job'        => $reception->job_today,
                             'production' => number_format($reception->production_count),
-                            'ritase'     => $reception->ritase_result,
+                            'ritase'     => 0,
                             'notes'      => $reception->notes ?? '',
                             'photo'      => $reception->photo ?? '',
                         ]) }})">
@@ -473,16 +475,9 @@
                             </td>
                             {{-- Kolom Hasil --}}
                             <td class="text-end pe-3 py-2">
-                                <div class="d-flex flex-column align-items-end gap-1">
-                                    <span class="badge fs-6 fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
-                                        {{ number_format($reception->production_count) }}
-                                    </span>
-                                    @if($reception->ritase_result > 0)
-                                        <span class="badge" style="font-size: 0.7rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">
-                                            {{ $reception->ritase_result }} Rit
-                                        </span>
-                                    @endif
-                                </div>
+                                <span class="badge fs-6 fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
+                                    {{ number_format($reception->production_count) }}
+                                </span>
                             </td>
                         </tr>
                         @empty
@@ -526,7 +521,7 @@
                                 <thead>
                                     <tr class="text-muted" style="font-size: 0.65rem;">
                                         <th>GRUP</th>
-                                        <th class="text-end">PROD / RIT</th>
+                                        <th class="text-end">PRODUKSI</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -536,9 +531,6 @@
                                         <td class="text-end">
                                             <span class="badge bg-success fw-bold" style="font-size: 0.75rem;" title="Produksi">
                                                 {{ number_format($group['production']) }}
-                                            </span>
-                                            <span class="badge bg-info text-dark fw-bold" style="font-size: 0.75rem;" title="Ritase">
-                                                {{ number_format($group['ritase']) }}
                                             </span>
                                         </td>
                                     </tr>
@@ -565,7 +557,7 @@
                     </div>
                     <h6 class="mb-0 fw-bold">Peringkat Operator Per Plant</h6>
                 </div>
-                <div class="badge bg-sky-50 text-sky-600 fw-medium">Produksi (Hijau) & Ritase (Biru)</div>
+                <div class="badge bg-sky-50 text-sky-600 fw-medium">Berdasarkan Produksi</div>
             </div>
             
             <div class="p-3">
@@ -581,7 +573,7 @@
                                 {{-- Header row --}}
                                 <div class="list-group-item bg-light py-1 px-3 d-flex justify-content-between align-items-center">
                                     <span class="text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em;">Operator</span>
-                                    <span class="text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em;">Prod / Rit</span>
+                                    <span class="text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em;">Produksi</span>
                                 </div>
                                 @forelse($operators as $op)
                                 <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
@@ -591,7 +583,6 @@
                                     </div>
                                     <div class="d-flex gap-1">
                                         <span class="badge bg-success small" style="font-size: 0.65rem;" title="Produksi">{{ number_format($op['production']) }}</span>
-                                        <span class="badge bg-info text-dark small" style="font-size: 0.65rem;" title="Ritase">{{ number_format($op['ritase']) }}</span>
                                     </div>
                                 </div>
                                 @empty
@@ -685,12 +676,7 @@
                         <div class="fw-bold" style="font-size:1.1rem;color:#047857;" id="modal-production"></div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="p-2 rounded-3" style="background:#e0f2fe; border:1px solid #bae6fd;">
-                        <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Ritase</div>
-                        <div class="fw-bold" style="font-size:1.1rem;color:#0369a1;" id="modal-ritase"></div>
-                    </div>
-                </div>
+
             </div>
             <div id="modal-notes-wrapper" class="mt-3 p-2 rounded-3" style="background:#fffbeb;border:1px solid #fde68a;">
                 <div class="text-muted" style="font-size:0.65rem;text-transform:uppercase;font-weight:700;">Catatan</div>
@@ -791,7 +777,6 @@ function openDetailModal(data) {
     document.getElementById('modal-shift').textContent      = 'Shift ' + data.shift;
     document.getElementById('modal-job').textContent        = data.job  || '-';
     document.getElementById('modal-production').textContent = data.production;
-    document.getElementById('modal-ritase').textContent     = data.ritase > 0 ? data.ritase + ' Rit' : '-';
 
     const notesWrapper = document.getElementById('modal-notes-wrapper');
     if (data.notes) {
@@ -835,5 +820,62 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     updateFilters();
 });
+</script>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/xlsx.full.min.js') }}"></script>
+<script>
+function exportTableToExcel() {
+    // Collect data from the monitoring table
+    const rows = document.querySelectorAll('table tbody tr');
+    const data = [];
+
+    // Header
+    data.push(['Tanggal', 'Nama Karyawan', 'Plant', 'Grup', 'Shift', 'Jumlah Produksi', 'Catatan']);
+
+    rows.forEach(function(row) {
+        // Skip empty state rows
+        if (row.querySelector('td[colspan]')) return;
+
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 3) return;
+
+        // Parse from rendered cells
+        const detailCell = cells[1];
+        const resultCell = cells[2];
+
+        const dateEl    = detailCell.querySelector('.badge');
+        const nameEl    = detailCell.querySelector('.fw-bold');
+        const metaItems = detailCell.querySelectorAll('.fw-medium span');
+        const notesEl   = detailCell.querySelector('.fst-italic');
+        const prodEl    = resultCell.querySelector('.badge.fs-6, .badge.fw-bold');
+
+        data.push([
+            dateEl    ? dateEl.textContent.trim()    : '',
+            nameEl    ? nameEl.textContent.trim()    : '',
+            metaItems[0] ? metaItems[0].textContent.replace('PLANT ','').trim() : '',
+            metaItems[2] ? metaItems[2].textContent.replace('GRUP ','').trim()  : '',
+            metaItems[4] ? metaItems[4].textContent.replace('SHIFT ','').trim() : '',
+            prodEl    ? prodEl.textContent.trim()    : '',
+            notesEl   ? notesEl.textContent.trim()  : '',
+        ]);
+    });
+
+    const wb  = XLSX.utils.book_new();
+    const ws  = XLSX.utils.aoa_to_sheet(data);
+
+    // Column widths
+    ws['!cols'] = [
+        {wch:12}, {wch:25}, {wch:8}, {wch:8},
+        {wch:8},  {wch:15}, {wch:30}
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Produksi');
+
+    const now      = new Date();
+    const dateStr  = now.toISOString().split('T')[0];
+    XLSX.writeFile(wb, 'laporan_produksi_' + dateStr + '.xlsx');
+}
 </script>
 @endpush

@@ -31,8 +31,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/overtime', [OvertimeController::class, 'index'])->name('overtime.index');
     Route::get('/overtime/create', [OvertimeController::class, 'create'])->name('overtime.create');
     Route::post('/overtime', [OvertimeController::class, 'store'])->name('overtime.store');
-    Route::patch('/overtime/{overtime}/approve', [OvertimeController::class, 'approve'])->name('overtime.approve');
-    Route::patch('/overtime/{overtime}/reject', [OvertimeController::class, 'reject'])->name('overtime.reject');
+    Route::put('/overtime/{overtime}', [OvertimeController::class, 'update'])->name('overtime.update');
     Route::delete('/overtime/{overtime}', [OvertimeController::class, 'destroy'])->name('overtime.destroy');
 
     // === ADMIN ONLY (leader tidak bisa akses) ===
