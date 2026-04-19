@@ -24,8 +24,8 @@ class OvertimeController extends Controller
         }
 
         $overtimes = $query->orderBy('overtime_date', 'desc')
-                           ->orderBy('created_at', 'desc')
-                           ->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $employees = Employee::orderBy('name')->get();
         $employeeMap = $employees->mapWithKeys(function ($emp) {
@@ -38,36 +38,44 @@ class OvertimeController extends Controller
 
         return view('overtime.index', compact('overtimes', 'employees', 'startDate', 'endDate', 'employeeMap'));
     }
-    
+
     public function create()
     {
         $employees = Employee::orderBy('name')->get();
         return view('overtime.create', compact('employees'));
     }
-    
+
     public function store(Request $request)
     {
         $request->validate([
-            'employee_name' => 'required|string|max:255',
             'overtime_date' => 'required|date|before_or_equal:today',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
             'reason' => 'required|string|max:1000',
+
+            'employee_name' => 'nullable|string|max:255',
+            'employee_name_manual' => 'nullable|string|max:255',
+            'employee_id_manual' => 'nullable|string|max:50',
         ]);
-        
+
+        if ($request->employee_name_manual) {
+            $employeeName = $request->employee_name_manual;
+        } else {
+            $employeeName = $request->employee_name;
+        }
+
         OvertimeData::create([
-            'employee_name' => $request->employee_name,
+            'employee_name' => $employeeName,
             'overtime_date' => $request->overtime_date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
             'reason' => $request->reason,
             'status' => 'pending',
         ]);
-        
         return redirect()->route('overtime.index')
             ->with('success', 'Pengajuan lembur berhasil dikirim!');
     }
-    
+
     public function update(Request $request, OvertimeData $overtime)
     {
         $request->validate([

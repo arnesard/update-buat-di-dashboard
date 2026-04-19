@@ -421,6 +421,7 @@
                             <th class="ps-3 py-2 border-0" style="width:56px;">Foto</th>
                             <th class="py-2 border-0">Detail Produksi</th>
                             <th class="text-end pe-3 border-0">Hasil</th>
+                            <th class="text-center pe-3 border-0" style="width:80px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="border-top-0">
@@ -478,6 +479,22 @@
                                 <span class="badge fs-6 fw-bold" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">
                                     {{ number_format($reception->production_count) }}
                                 </span>
+                            </td>
+                            {{-- Kolom Aksi --}}
+                            <td class="text-center pe-3 py-2" onclick="event.stopPropagation();">
+                                <div class="d-flex justify-content-center gap-1">
+                                    <a href="{{ route('input.edit', ['plant' => $reception->emp_plant, 'id' => $reception->id]) }}" 
+                                       class="btn btn-sm btn-primary text-white py-1 px-2 border-0 rounded-3 shadow-sm" 
+                                       title="Edit">
+                                        <i data-lucide="edit" size="14"></i>
+                                    </a>
+                                    <button type="button" 
+                                            class="btn btn-sm btn-danger text-white py-1 px-2 border-0 rounded-3 shadow-sm" 
+                                            onclick="openDeleteReportModal('{{ route('input.delete', ['plant' => $reception->emp_plant, 'id' => $reception->id]) }}', '{{ addslashes($reception->emp_name ?? 'Unknown') }}')"
+                                            title="Hapus">
+                                        <i data-lucide="trash-2" size="12"></i>
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                         @empty
@@ -689,10 +706,51 @@
   </div>
 </div>
 
+{{-- Modal Konfirmasi Hapus --}}
+<div class="modal fade" id="deleteReportModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:1.25rem; overflow:hidden;">
+            <div class="modal-header border-0" style="background: linear-gradient(135deg,#ef4444,#b91c1c); color:white;">
+                <h5 class="modal-title fw-bold">
+                    <i data-lucide="alert-triangle" style="width:18px;height:18px;vertical-align:middle;" class="me-2"></i>
+                    Konfirmasi Hapus Data
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <div style="width:60px;height:60px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;">
+                        <i data-lucide="trash-2" style="width:30px;height:30px;color:#ef4444;"></i>
+                    </div>
+                </div>
+                <h5 class="fw-bold mb-2">Hapus Data Produksi?</h5>
+                <p class="text-muted mb-0">Apakah Anda yakin ingin menghapus data milik <strong id="delete-report-emp-name" class="text-dark"></strong>?</p>
+                <p class="small text-danger mt-2 mb-0">Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+            <div class="modal-footer border-0 d-flex justify-content-center bg-light p-3 gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Batal</button>
+                <form id="deleteReportForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2">
+                        <i data-lucide="trash-2" size="16"></i> Ya, Hapus Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
+function openDeleteReportModal(url, empName) {
+    document.getElementById('deleteReportForm').action = url;
+    document.getElementById('delete-report-emp-name').textContent = empName;
+    new bootstrap.Modal(document.getElementById('deleteReportModal')).show();
+    lucide.createIcons();
+}
 function updateFilters() {
     const type = document.getElementById('filterType').value;
     const startLabel = document.getElementById('startLabel');

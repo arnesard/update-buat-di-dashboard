@@ -32,8 +32,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/overtime/create', [OvertimeController::class, 'create'])->name('overtime.create');
     Route::post('/overtime', [OvertimeController::class, 'store'])->name('overtime.store');
     Route::put('/overtime/{overtime}', [OvertimeController::class, 'update'])->name('overtime.update');
-    Route::delete('/overtime/{overtime}', [OvertimeController::class, 'destroy'])->name('overtime.destroy');
-
+    Route::delete('/overtime/{overtime}', [OvertimeController::class, 'destroy'])
+        ->name('overtime.delete');
     // === ADMIN ONLY (leader tidak bisa akses) ===
     Route::middleware(['admin.only'])->group(function () {
         // Employee management routes

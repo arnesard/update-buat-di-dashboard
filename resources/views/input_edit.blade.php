@@ -30,6 +30,7 @@
                 <form action="{{ route('input.update', ['plant' => $plant, 'id' => $data->id]) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="redirect_to" value="{{ url()->previous() }}">
                     <div class="row g-4">
 
                         {{-- nama operator --}}

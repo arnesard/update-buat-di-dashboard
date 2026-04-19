@@ -492,6 +492,11 @@ class ProductionController extends Controller
         // Clear caches on data change
         Cache::flush();
 
+        $redirectUrl = $request->input('redirect_to');
+        if ($redirectUrl) {
+            return redirect($redirectUrl)->with('success', 'Data berhasil direvisi!');
+        }
+
         return redirect()->route('input.form', $plant)->with('success', 'Data berhasil direvisi!');
     }
 
@@ -509,6 +514,6 @@ class ProductionController extends Controller
 
         Cache::flush();
 
-        return redirect()->route('input.form', $plant)->with('success', 'Data berhasil dihapus!');
+        return back()->with('success', 'Data berhasil dihapus!');
     }
 }
