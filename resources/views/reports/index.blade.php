@@ -642,10 +642,10 @@
           {{-- Kolom Foto --}}
           <div class="col-md-5 d-flex align-items-center justify-content-center" style="background:#f8fafc; min-height:260px;">
             <div id="modal-photo-wrapper" class="text-center p-3 w-100">
-              <img id="modal-photo" src="" alt="Foto Produksi"
+              <img id="modal-photo" src="" alt="Foto Produksi" class="d-none"
                    style="max-width:100%; max-height:280px; border-radius:12px; object-fit:cover; cursor:zoom-in; box-shadow:0 4px 16px rgba(0,0,0,0.12);"
                    onclick="openLightbox(this.src)">
-              <div id="modal-no-photo" class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+              <div id="modal-no-photo" class="d-flex flex-column align-items-center justify-content-center py-5 text-muted d-none">
                   <i data-lucide="image-off" style="width:48px;height:48px;color:#cbd5e1;"></i>
                   <p class="mt-2 small mb-0">Tidak ada foto</p>
               </div>
@@ -847,12 +847,12 @@ function openDetailModal(data) {
     const img     = document.getElementById('modal-photo');
     const noPhoto = document.getElementById('modal-no-photo');
     if (data.photo) {
-        img.src              = data.photo;
-        img.style.display    = 'block';
-        noPhoto.style.display = 'none';
+        img.src = data.photo;
+        img.classList.remove('d-none');
+        noPhoto.classList.add('d-none');
     } else {
-        img.style.display    = 'none';
-        noPhoto.style.display = 'flex';
+        img.classList.add('d-none');
+        noPhoto.classList.remove('d-none');
     }
 
     // Re-render lucide icons inside modal
