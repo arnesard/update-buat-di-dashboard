@@ -411,25 +411,30 @@ class ProductionController extends Controller
         // Default sudah diset di view: hari ini untuk shift 1&2, kemarin untuk shift 3
         $inputDate = $request->date ? Carbon::parse($request->date) : Carbon::today();
 
-        $data = [
-            'employee_id'      => $request->employee_id,
-            'shift'            => $request->shift,
-            'ritase_result'    => $request->ritase_result ?? 0,
-            'date'             => $inputDate,
-            'production_count' => $request->production_count ?? 0,
-            'job_today'        => $jobTodayString,
-            'notes'            => $request->notes
-        ];
-
-        // Handle photo upload
+        // Handle photo upload (disimpan sekali saja)
+        $photoPath = null;
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/production'), $filename);
-            $data['photo'] = 'uploads/production/' . $filename;
+            $photoPath = 'uploads/production/' . $filename;
         }
 
-        Reception::create($data);
+        // Loop dan simpan 1 row database per 1 item pekerjaan
+        $jobs = array_filter(array_map('trim', (array)$jobTodayArray));
+        foreach ($jobs as $jobName) {
+            $data = [
+                'employee_id'      => $request->employee_id,
+                'shift'            => $request->shift,
+                'ritase_result'    => $request->ritase_result ?? 0,
+                'date'             => $inputDate,
+                'production_count' => $request->production_count ?? 0,
+                'job_today'        => $jobName,
+                'notes'            => $request->notes,
+                'photo'            => $photoPath
+            ];
+            Reception::create($data);
+        }
 
         // Clear dashboard cache when new data is inputted
         Cache::forget('dashboard_7days_' . Carbon::today()->format('Y-m-d'));
@@ -464,12 +469,11 @@ class ProductionController extends Controller
 
         // job_today dikirim sebagai array dari checkboxes
         $jobTodayArray  = $request->input('job_today', []);
-        $jobTodayString = implode(',', array_filter(array_map('trim', (array)$jobTodayArray)));
+        $jobs = array_values(array_filter(array_map('trim', (array)$jobTodayArray)));
 
         $updateData = [
             'employee_id'      => $request->employee_id,
             'shift'            => $request->shift,
-            'job_today'        => $jobTodayString,
             'production_count' => $request->production_count,
             'ritase_result'    => $request->ritase_result,
             'notes'            => $request->notes,
@@ -487,7 +491,26 @@ class ProductionController extends Controller
             $updateData['photo'] = 'uploads/production/' . $filename;
         }
 
-        $reception->update($updateData);
+        if (count($jobs) > 0) {
+            // Update baris saat ini dengan pekerjaan pertama yang dipilih
+            $updateData['job_today'] = $jobs[0];
+            $reception->update($updateData);
+
+            // Jika ada lebih dari 1 pekerjaan yang dipilih, buat baris baru untuk sisanya
+            for ($i = 1; $i < count($jobs); $i++) {
+                $newData = $updateData;
+                $newData['job_today'] = $jobs[$i];
+                // Pastikan foto duplikat pakai URL foto yang sama
+                if (!isset($newData['photo'])) {
+                    $newData['photo'] = $reception->photo;
+                }
+                // Pastikan atribut tanggal juga tercopy di baris baru untuk data edit
+                $newData['date'] = $reception->date;
+                Reception::create($newData);
+            }
+        } else {
+            $reception->update($updateData);
+        }
 
         // Clear caches on data change
         Cache::flush();
