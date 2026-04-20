@@ -192,10 +192,10 @@
                             <td>
                                 @php
                                     $planColors = ['B' => 'primary', 'H' => 'success', 'I' => 'warning', 'T' => 'danger'];
-                                    $planColor = $planColors[$reception->plant] ?? 'secondary';
+                                    $planColor = $planColors[$reception->status] ?? 'secondary';
                                 @endphp
                                 <span class="badge bg-{{ $planColor }}">
-                                    Plan {{ $reception->plant }}
+                                    Plan {{ $reception->status }}
                                 </span>
                             </td>
                             <td>{{ $reception->ritase_result ?? '-' }}</td>
@@ -223,6 +223,47 @@
     var mainChart = null;
     var plantCharts = {};
 
+    function setupLegendHighlight(chart, names, dataSeries, colorsArray) {
+        chart.off('legendselectchanged'); 
+        var activeFocus = null;
+        
+        chart.on('legendselectchanged', function(params) {
+            var clickedName = params.name;
+            var selectedObj = {};
+            names.forEach(function(n) { selectedObj[n] = true; });
+
+            if (activeFocus === clickedName) {
+                activeFocus = null; 
+            } else {
+                activeFocus = clickedName; 
+            }
+
+            var newSeries = names.map(function(name, idx) {
+                var isGrey = (activeFocus !== null && name !== activeFocus);
+                var color = isGrey ? '#e2e8f0' : colorsArray[idx % colorsArray.length];
+                var width = isGrey ? 1 : 3;
+                var zLevel = isGrey ? 0 : 10;
+                
+                return {
+                    name: name,
+                    type: 'line',
+                    data: dataSeries[name],
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: isGrey ? 3 : 8,
+                    itemStyle: { color: color },
+                    lineStyle: { width: width, color: color },
+                    z: zLevel
+                };
+            });
+            
+            chart.setOption({
+                legend: { selected: selectedObj },
+                series: newSeries
+            });
+        });
+    }
+
     function applyIndividualFilter(param, value) {
         // param = "job_b", value = "Scan"
         var plant = param.replace('job_', '').toUpperCase();
@@ -241,9 +282,9 @@
                         data: data.series[name],
                         smooth: true,
                         symbol: 'circle',
-                        symbolSize: 6,
+                        symbolSize: 8,
                         itemStyle: { color: chartColors[idx % chartColors.length] },
-                        lineStyle: { width: 2 }
+                        lineStyle: { width: 3 }
                     };
                 });
 
@@ -269,6 +310,8 @@
                     },
                     series: series
                 }, true); // true = replace all, don't merge old series
+
+                setupLegendHighlight(chart, names, data.series, chartColors);
             });
     }
 
@@ -445,9 +488,9 @@
                     data: plantData[name],
                     smooth: true,
                     symbol: 'circle',
-                    symbolSize: 6,
+                    symbolSize: 8,
                     itemStyle: { color: colors[idx % colors.length] },
-                    lineStyle: { width: 2 }
+                    lineStyle: { width: 3 }
                 };
             });
 
@@ -473,6 +516,8 @@
                 },
                 series: series
             });
+
+            setupLegendHighlight(chart, names, plantData, colors);
 
             perfCharts[plant] = chart;
         });
