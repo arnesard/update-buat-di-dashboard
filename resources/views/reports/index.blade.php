@@ -436,7 +436,7 @@
                             'production' => number_format($reception->production_count),
                             'ritase'     => 0,
                             'notes'      => $reception->notes ?? '',
-                            'photo'      => $reception->photo ?? '',
+                            'photo'      => $reception->photo ? asset($reception->photo) : '',
                         ]) }})">
                             {{-- Kolom Foto --}}
                             <td class="ps-3 py-2">
@@ -847,7 +847,7 @@ function openDetailModal(data) {
     const img     = document.getElementById('modal-photo');
     const noPhoto = document.getElementById('modal-no-photo');
     if (data.photo) {
-        img.src              = '/' + data.photo;
+        img.src              = data.photo;
         img.style.display    = 'block';
         noPhoto.style.display = 'none';
     } else {
