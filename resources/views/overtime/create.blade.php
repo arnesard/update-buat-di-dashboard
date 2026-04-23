@@ -42,15 +42,39 @@
                     <div class="row g-4">
                         <div class="col-12">
                             <label class="form-label fw-semibold">Nama Karyawan *</label>
-                            <input type="text" name="employee_name" list="employeeList"
-                                class="form-control form-control-custom" placeholder="Ketik atau pilih nama..." required
-                                autocomplete="off">
-                            <datalist id="employeeList">
-                                @foreach ($employees as $employee)
-                                    <option value="{{ $employee->name }}">{{ $employee->employee_id }} -
-                                        {{ $employee->plant }}</option>
-                                @endforeach
-                            </datalist>
+                            <div class="position-relative" id="ot-operator-wrapper">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                    </span>
+                                    <input type="text" id="ot-operator-search"
+                                        class="form-control form-control-custom border-start-0 border-end-0 shadow-none"
+                                        placeholder="Ketik nama karyawan..." autocomplete="off">
+                                    <button type="button" class="btn btn-outline-secondary px-3" id="ot-btn-clear" title="Hapus" style="display:none; border-radius: 0 0.85rem 0.85rem 0;">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                </div>
+                                {{-- Hidden input yang dikirim ke server --}}
+                                <input type="hidden" name="employee_name" id="ot-employee-name-hidden">
+                                <div id="ot-operator-dropdown"
+                                    class="position-absolute w-100 bg-white border rounded-3 shadow mt-1 overflow-auto"
+                                    style="max-height: 220px; z-index: 1000; display: none;">
+                                    @foreach ($employees as $employee)
+                                        <div class="ot-operator-option px-3 py-2"
+                                            style="cursor: pointer;"
+                                            data-name="{{ $employee->name }}"
+                                            data-id="{{ $employee->employee_id }}"
+                                            data-plant="{{ $employee->plant }}">
+                                            <span class="fw-bold">{{ $employee->employee_id }}</span>
+                                            <span class="text-muted mx-1">—</span>
+                                            <span>{{ $employee->name }}</span>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary ms-2" style="font-size:10px;">Plant {{ $employee->plant }}</span>
+                                        </div>
+                                    @endforeach
+                                    <div id="ot-no-result" class="px-3 py-2 text-muted small" style="display:none;">Tidak ditemukan</div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <div class="col-12 col-md-6">
@@ -153,6 +177,97 @@
             if (window.lucide) {
                 lucide.createIcons();
             }
+
+            // === CUSTOM SEARCHABLE DROPDOWN KARYAWAN LEMBUR ===
+            var searchInput = document.getElementById('ot-operator-search');
+            var dropdown    = document.getElementById('ot-operator-dropdown');
+            var hiddenInput = document.getElementById('ot-employee-name-hidden');
+            var options     = document.querySelectorAll('.ot-operator-option');
+            var noResult    = document.getElementById('ot-no-result');
+            var btnClear    = document.getElementById('ot-btn-clear');
+
+            function filterOptions() {
+                var query = searchInput.value.toLowerCase();
+                var found = 0;
+                options.forEach(function(opt) {
+                    var name = opt.dataset.name.toLowerCase();
+                    var id   = opt.dataset.id.toLowerCase();
+                    if (name.includes(query) || id.includes(query)) {
+                        opt.style.display = 'block';
+                        found++;
+                    } else {
+                        opt.style.display = 'none';
+                    }
+                });
+                noResult.style.display = found === 0 ? 'block' : 'none';
+            }
+
+            searchInput.addEventListener('focus', function() {
+                dropdown.style.display = 'block';
+                filterOptions();
+            });
+
+            searchInput.addEventListener('input', function() {
+                filterOptions();
+                btnClear.style.display = searchInput.value ? 'block' : 'none';
+                // Reset hidden value jika user hapus manual
+                if (!searchInput.value) hiddenInput.value = '';
+            });
+
+            btnClear.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                searchInput.value  = '';
+                hiddenInput.value  = '';
+                btnClear.style.display = 'none';
+                searchInput.style.borderColor = '';
+                dropdown.style.display = 'block';
+                filterOptions();
+                searchInput.focus();
+            });
+
+            options.forEach(function(opt) {
+                opt.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    searchInput.value = this.dataset.name;
+                    hiddenInput.value = this.dataset.name;
+                    dropdown.style.display = 'none';
+                    searchInput.style.borderColor = '#198754';
+                    btnClear.style.display = 'block';
+                });
+
+                opt.addEventListener('mouseenter', function() {
+                    this.style.background = '#f0f9ff';
+                });
+                opt.addEventListener('mouseleave', function() {
+                    this.style.background = '';
+                });
+
+                // Touch support untuk mobile
+                opt.addEventListener('touchstart', function(e) {
+                    searchInput.value = this.dataset.name;
+                    hiddenInput.value = this.dataset.name;
+                    dropdown.style.display = 'none';
+                    searchInput.style.borderColor = '#198754';
+                    btnClear.style.display = 'block';
+                });
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!document.getElementById('ot-operator-wrapper').contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+
+            // Validasi sebelum submit: pastikan nama sudah dipilih dari dropdown
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (!hiddenInput.value) {
+                    e.preventDefault();
+                    searchInput.style.borderColor = '#dc3545';
+                    searchInput.focus();
+                    alert('Pilih nama karyawan dari daftar terlebih dahulu!');
+                }
+            });
         });
+
     </script>
 @endpush
