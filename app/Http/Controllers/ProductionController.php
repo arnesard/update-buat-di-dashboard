@@ -116,7 +116,13 @@ class ProductionController extends Controller
                 'employees.primary_job_type as job_type',
                 'employees.default_status as status'
             )
-            ->whereDate('receptions.date', $today)
+            ->where(function($q) use ($today) {
+                $q->whereDate('receptions.date', $today)
+                  ->orWhere(function($q2) {
+                      $q2->where('receptions.shift', 3)
+                         ->whereDate('receptions.date', Carbon::yesterday());
+                  });
+            })
             ->orderBy('receptions.created_at', 'desc');
 
         if ($operatorName) {
@@ -370,7 +376,13 @@ class ProductionController extends Controller
                 'employees.employee_id as operator_id',
                 'employees.plant as emp_plant'
             )
-            ->whereDate('receptions.date', Carbon::today())
+            ->where(function($q) {
+                $q->whereDate('receptions.date', Carbon::today())
+                  ->orWhere(function($q2) {
+                      $q2->where('receptions.shift', 3)
+                         ->whereDate('receptions.date', Carbon::yesterday());
+                  });
+            })
             ->orderBy('receptions.created_at', 'desc');
 
         if ($plant) {
